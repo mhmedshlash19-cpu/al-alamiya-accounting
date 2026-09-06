@@ -7,7 +7,7 @@
 <title>مستودع العالمية لتجارة الأدوية</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
 :root{
@@ -852,6 +852,23 @@ th{
 
 <button class="btn btn-green" onclick="openItemModal()">
 + صنف جديد
+</button>
+  <button class="btn btn-blue" onclick="document.getElementById('itemsExcelFile').click()">
+📥 استيراد Excel
+</button>
+
+<input type="file"
+       id="itemsExcelFile"
+       accept=".xlsx,.xls"
+       style="display:none"
+       onchange="importItemsExcel(this)">
+
+<button class="btn btn-green" onclick="exportItemsExcel()">
+📤 تصدير Excel
+</button>
+
+<button class="btn btn-red" onclick="exportItemsPDF()">
+📄 تصدير PDF
 </button>
 
 </div>
@@ -3584,7 +3601,479 @@ $("receiptDate").value=today();
 
 renderAll();
 restoreSaleDraft();
+/* =========================
+   استيراد وتصدير الأصناف Excel + PDF
+========================= */
 
+function exportItemsExcel(){
+
+  if(!db.items.length){
+    return alert("لا توجد أصناف للتصدير");
+  }
+
+  const rows = db.items.map((item,index)=>{
+
+    const company = db.companies.find(c=>c.id===item.companyId);
+
+    return {
+      "الرقم": index+1,
+      "اسم الصنف": item.name || "",
+      "الاسم العلمي": item.scientific || "",
+      "الباركود": item.barcode || "",
+      "الشركة": company?.name || "",
+      "التصنيف": item.category || "",
+      "المخزون": Number(item.qty || 0),
+      "سعر البيع": Number(item.price || 0),
+      "سعر الشراء": Number(item.cost || 0),
+      "حد النقص": Number(item.minQty || 0),
+      "عمولة المندوب %": item.commissionOverride ?? "",
+      "شراء العرض": Number(item.buyQty || 0),
+      "بونص العرض": Number(item.freeQty || 0)
+    };
+  });
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    wb,
+    ws,
+    "الأصناف"
+  );
+
+  XLSX.writeFile(
+    wb,
+    "اصناف-مستودع-العالمية.xlsx"
+  );
+}
+
+
+function importItemsExcel(input){
+
+  const file = input.files?.[0];
+
+  if(!file){
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function(e){
+
+    try{
+
+      const data = new Uint8Array(e.target.result);
+
+      const workbook = XLSX.read(
+        data,
+        {type:"array"}
+      );
+
+      const sheet =
+      workbook.Sheets[workbook.SheetNames[0]];
+
+      const rows =
+      XLSX.utils.sheet_to_json(
+        sheet,
+        {defval:""}
+      );
+
+      if(!rows.length){
+        alert("ملف Excel فارغ");
+        input.value="";
+        return;
+      }
+
+      let added = 0;
+
+      rows.forEach(row=>{
+
+        const name =
+        row["اسم الصنف"] ||
+        row["الصنف"] ||
+        row["name"] ||
+        "";
+
+        if(!String(name).trim()){
+          return;
+        }
+
+        const companyName =
+        String(
+          row["الشركة"] ||
+          row["company"] ||
+          ""
+        ).trim();
+
+        let companyId="";
+
+        if(companyName){
+
+          let company =
+          db.companies.find(
+            c=>String(c.name).trim()===companyName
+          );
+
+          if(!company){
+
+            company={
+              id:uid(),
+              name:companyName,
+              commission:0,
+              buyQty:0,
+              freeQty:0,
+              note:"",
+              active:true
+            };
+
+            db.companies.push(company);
+          }
+
+          companyId=company.id;
+        }
+
+        db.items.push({
+
+          id:uid(),
+
+          name:String(name).trim(),
+
+          scientific:String(
+            row["الاسم العلمي"] ||
+            row["scientific"] ||
+            ""
+          ),
+
+          barcode:String(
+            row["الباركود"] ||
+            row["barcode"] ||
+            ""
+          ),
+
+          companyId,
+
+          category:String(
+            row["التصنيف"] ||
+            row["category"] ||
+            ""
+          ),
+
+          qty:Number(
+            row["المخزون"] ||
+            row["الكمية"] ||
+            row["qty"] ||
+            0
+          ),
+
+          price:Number(
+            row["سعر البيع"] ||
+            row["price"] ||
+            0
+          ),
+
+          cost:Number(
+            row["سعر الشراء"] ||
+            row["cost"] ||
+            0
+          ),
+
+          minQty:Number(
+            row["حد النقص"] ||
+            row["minQty"] ||
+            db.settings.lowStock ||
+            0
+          ),
+
+          commissionOverride:
+          row["عمولة المندوب %"]!=="" &&
+          row["عمولة المندوب %"]!==undefined
+          ?Number(row["عمولة المندوب %"])
+          :null,
+
+          buyQty:Number(
+            row["شراء العرض"] ||
+            row["buyQty"] ||
+            0
+          ),
+
+          freeQty:Number(
+            row["بونص العرض"] ||
+            row["freeQty"] ||
+            0
+          ),
+
+          active:true
+        });
+
+        added++;
+      });
+
+      saveDB();
+      renderAll();
+
+      input.value="";
+
+      alert(
+        "تم استيراد " +
+        added +
+        " صنف بنجاح"
+      );
+
+    }catch(err){
+
+      console.error(err);
+
+      alert(
+        "حدث خطأ أثناء قراءة ملف Excel"
+      );
+
+      input.value="";
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+
+async function exportItemsPDF(){
+
+  if(!db.items.length){
+    return alert("لا توجد أصناف للتصدير");
+  }
+
+  const old =
+  document.getElementById("itemsPdfArea");
+
+  if(old){
+    old.remove();
+  }
+
+  const area =
+  document.createElement("div");
+
+  area.id="itemsPdfArea";
+
+  area.style.cssText=`
+    position:fixed;
+    right:-10000px;
+    top:0;
+    width:1100px;
+    background:#fff;
+    color:#111;
+    padding:30px;
+    direction:rtl;
+    font-family:Tahoma,Arial,sans-serif;
+  `;
+
+  area.innerHTML=`
+
+    <div style="
+      text-align:center;
+      margin-bottom:25px
+    ">
+
+      ${
+        db.settings.logo
+        ?`
+          <img
+          src="${db.settings.logo}"
+          style="
+            max-width:120px;
+            max-height:90px;
+            margin-bottom:10px
+          ">
+        `
+        :""
+      }
+
+      <h2 style="margin:5px 0">
+        ${esc(db.settings.warehouseName)}
+      </h2>
+
+      <h3 style="margin:5px 0">
+        تقرير الأصناف والمخزون
+      </h3>
+
+      <div>
+        التاريخ:
+        ${today()}
+      </div>
+
+    </div>
+
+    <table style="
+      width:100%;
+      border-collapse:collapse;
+      font-size:16px
+    ">
+
+      <thead>
+        <tr>
+          <th style="border:1px solid #555;padding:8px">
+            الصنف
+          </th>
+
+          <th style="border:1px solid #555;padding:8px">
+            الشركة
+          </th>
+
+          <th style="border:1px solid #555;padding:8px">
+            التصنيف
+          </th>
+
+          <th style="border:1px solid #555;padding:8px">
+            المخزون
+          </th>
+
+          <th style="border:1px solid #555;padding:8px">
+            سعر البيع
+          </th>
+
+          <th style="border:1px solid #555;padding:8px">
+            حد النقص
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        ${
+          db.items.map(item=>{
+
+            const company =
+            db.companies.find(
+              c=>c.id===item.companyId
+            );
+
+            return `
+              <tr>
+
+                <td style="border:1px solid #777;padding:8px">
+                  ${esc(item.name || "")}
+                </td>
+
+                <td style="border:1px solid #777;padding:8px">
+                  ${esc(company?.name || "")}
+                </td>
+
+                <td style="border:1px solid #777;padding:8px">
+                  ${esc(item.category || "")}
+                </td>
+
+                <td style="border:1px solid #777;padding:8px">
+                  ${Number(item.qty || 0)}
+                </td>
+
+                <td style="border:1px solid #777;padding:8px">
+                  ${money(item.price)}
+                </td>
+
+                <td style="border:1px solid #777;padding:8px">
+                  ${Number(item.minQty || 0)}
+                </td>
+
+              </tr>
+            `;
+          }).join("")
+        }
+
+      </tbody>
+
+    </table>
+  `;
+
+  document.body.appendChild(area);
+
+  try{
+
+    const canvas =
+    await html2canvas(
+      area,
+      {
+        scale:2,
+        backgroundColor:"#ffffff"
+      }
+    );
+
+    const {jsPDF}=window.jspdf;
+
+    const pdf=
+    new jsPDF(
+      "p",
+      "mm",
+      "a4"
+    );
+
+    const pageWidth=
+    pdf.internal.pageSize.getWidth();
+
+    const pageHeight=
+    pdf.internal.pageSize.getHeight();
+
+    const imgWidth=
+    pageWidth-10;
+
+    const imgHeight=
+    canvas.height *
+    imgWidth /
+    canvas.width;
+
+    const img=
+    canvas.toDataURL(
+      "image/jpeg",
+      0.95
+    );
+
+    let position=5;
+    let remaining=imgHeight;
+
+    pdf.addImage(
+      img,
+      "JPEG",
+      5,
+      position,
+      imgWidth,
+      imgHeight
+    );
+
+    remaining -= pageHeight;
+
+    while(remaining>0){
+
+      position =
+      remaining-imgHeight+5;
+
+      pdf.addPage();
+
+      pdf.addImage(
+        img,
+        "JPEG",
+        5,
+        position,
+        imgWidth,
+        imgHeight
+      );
+
+      remaining -= pageHeight;
+    }
+
+    pdf.save(
+      "تقرير-اصناف-مستودع-العالمية.pdf"
+    );
+
+  }catch(err){
+
+    console.error(err);
+
+    alert(
+      "تعذر إنشاء ملف PDF"
+    );
+
+  }finally{
+
+    area.remove();
+  }
+}
 </script>
 
 </body>
