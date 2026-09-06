@@ -10,7 +10,7 @@
 body{margin:0;font-family:Arial,Tahoma;background:#f3f6fb;color:#18324f}
 header{background:#073b70;color:#fff;padding:18px;text-align:center}
 header h2{margin:0 0 5px}
-nav{display:flex;overflow:auto;background:#fff;padding:8px;gap:6px;box-shadow:0 2px 8px #0002;position:sticky;top:0}
+nav{display:flex;overflow:auto;background:#fff;padding:8px;gap:6px;box-shadow:0 2px 8px #0002;position:sticky;top:0;z-index:10}
 nav button{border:0;padding:10px 13px;border-radius:9px;background:#e8f1fb;color:#073b70;white-space:nowrap;font-weight:bold}
 nav button.active{background:#087bea;color:white}
 main{padding:14px}
@@ -20,11 +20,14 @@ main{padding:14px}
 .card b{display:block;font-size:20px;margin-top:9px}
 .green{color:#079868}.red{color:#d62332}.blue{color:#2455cf}.orange{color:#d57800}
 .box{background:#fff;border-radius:15px;padding:14px;margin-top:12px}
-input{width:100%;padding:12px;margin:5px 0;border:1px solid #ccd7e4;border-radius:9px}
+input,select{width:100%;padding:12px;margin:5px 0;border:1px solid #ccd7e4;border-radius:9px;background:#fff}
 button.add{width:100%;padding:12px;border:0;border-radius:10px;background:#0a9b69;color:#fff;font-weight:bold;margin-top:7px}
-table{width:100%;border-collapse:collapse;font-size:13px}
+button.danger{background:#d62332}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
 td,th{padding:9px;border-bottom:1px solid #eee;text-align:right}
 footer{text-align:center;padding:25px;color:#778899}
+.small{font-size:12px;color:#667}
+.scroll{overflow:auto}
 </style>
 </head>
 
@@ -51,92 +54,111 @@ footer{text-align:center;padding:25px;color:#778899}
 
 <section id="home" class="page active">
 <h2>لوحة المعلومات</h2>
-
 <div class="cards">
-<div class="card">مبيعات اليوم<b class="green">0 ل.س</b></div>
-<div class="card">مبيعات الشهر<b class="green">16,957,399 ل.س</b></div>
-<div class="card">ديون العملاء<b class="blue">88,760,282 ل.س</b></div>
-<div class="card">مستحقات الموردين<b class="red">16,686,812 ل.س</b></div>
-<div class="card">رصيد الصندوق<b>73,253,420 ل.س</b></div>
-<div class="card">الأصناف<b>960</b></div>
-<div class="card">قرب انتهاء الصلاحية<b class="red">179</b></div>
-<div class="card">عمولات المناديب<b class="orange">2,613,811 ل.س</b></div>
+<div class="card">مبيعات اليوم<b class="green" id="todaySales">0 ل.س</b></div>
+<div class="card">إجمالي المبيعات<b class="green" id="totalSales">0 ل.س</b></div>
+<div class="card">ديون العملاء<b class="blue" id="customerDebt">0 ل.س</b></div>
+<div class="card">مستحقات الموردين<b class="red" id="supplierDebt">0 ل.س</b></div>
+<div class="card">رصيد الصندوق<b id="cashBalance">0 ل.س</b></div>
+<div class="card">الأصناف<b id="itemsCount">0</b></div>
+<div class="card">قرب انتهاء الصلاحية<b class="red" id="expiryCount">0</b></div>
+<div class="card">عمولات المناديب<b class="orange" id="repCommission">0 ل.س</b></div>
 </div>
 </section>
 
 <section id="sales" class="page">
 <h2>المبيعات</h2>
 <div class="box">
-<input placeholder="اسم العميل">
-<input placeholder="اسم الدواء">
-<input type="number" placeholder="الكمية">
-<input type="number" placeholder="سعر البيع">
-<input type="number" placeholder="المدفوع">
-<button class="add" onclick="alert('تم حفظ الفاتورة التجريبية')">حفظ فاتورة البيع</button>
+<input id="saleCustomer" placeholder="اسم العميل">
+<select id="saleDrug"></select>
+<input id="saleQty" type="number" placeholder="الكمية">
+<input id="salePrice" type="number" placeholder="سعر البيع">
+<input id="salePaid" type="number" placeholder="المدفوع">
+<button class="add" onclick="saveSale()">حفظ فاتورة البيع</button>
+</div>
+<div class="box scroll">
+<table>
+<thead><tr><th>العميل</th><th>الدواء</th><th>الكمية</th><th>الإجمالي</th><th>المدفوع</th></tr></thead>
+<tbody id="salesTable"></tbody>
+</table>
 </div>
 </section>
 
 <section id="purchases" class="page">
 <h2>المشتريات</h2>
 <div class="box">
-<input placeholder="اسم المورد">
-<input placeholder="اسم الدواء">
-<input type="number" placeholder="الكمية">
-<input type="number" placeholder="سعر الشراء">
-<button class="add">حفظ فاتورة الشراء</button>
+<input id="purchaseSupplier" placeholder="اسم المورد">
+<input id="purchaseDrug" placeholder="اسم الدواء">
+<input id="purchaseQty" type="number" placeholder="الكمية">
+<input id="purchasePrice" type="number" placeholder="سعر الشراء">
+<input id="purchasePaid" type="number" placeholder="المدفوع">
+<button class="add" onclick="savePurchase()">حفظ فاتورة الشراء</button>
 </div>
 </section>
 
 <section id="stock" class="page">
 <h2>المخزون الدوائي</h2>
 <div class="box">
-<input placeholder="اسم الدواء">
-<input placeholder="الباركود">
-<input placeholder="الشركة">
-<input type="number" placeholder="الكمية">
-<input type="date">
-<button class="add">إضافة الدواء</button>
+<input id="drugName" placeholder="اسم الدواء">
+<input id="drugBarcode" placeholder="الباركود">
+<input id="drugCompany" placeholder="الشركة">
+<input id="drugQty" type="number" placeholder="الكمية">
+<input id="drugExpiry" type="date">
+<button class="add" onclick="addDrug()">إضافة الدواء</button>
+</div>
+<div class="box scroll">
+<table>
+<thead><tr><th>الدواء</th><th>الشركة</th><th>الكمية</th><th>الصلاحية</th></tr></thead>
+<tbody id="stockTable"></tbody>
+</table>
 </div>
 </section>
 
 <section id="customers" class="page">
 <h2>العملاء</h2>
 <div class="box">
-<input placeholder="اسم العميل">
-<input placeholder="رقم الهاتف">
-<button class="add">إضافة عميل</button>
+<input id="customerName" placeholder="اسم العميل">
+<input id="customerPhone" placeholder="رقم الهاتف">
+<button class="add" onclick="addCustomer()">إضافة عميل</button>
 </div>
+<div class="box" id="customersList"></div>
 </section>
 
 <section id="suppliers" class="page">
 <h2>الموردون</h2>
 <div class="box">
-<input placeholder="اسم المورد">
-<input placeholder="رقم الهاتف">
-<button class="add">إضافة مورد</button>
+<input id="supplierName" placeholder="اسم المورد">
+<input id="supplierPhone" placeholder="رقم الهاتف">
+<button class="add" onclick="addSupplier()">إضافة مورد</button>
 </div>
+<div class="box" id="suppliersList"></div>
 </section>
 
 <section id="reps" class="page">
 <h2>المناديب</h2>
 <div class="box">
-<input placeholder="اسم المندوب">
-<input placeholder="رقم الهاتف">
-<input placeholder="المنطقة">
-<input type="number" placeholder="نسبة العمولة %">
-<button class="add">إضافة مندوب</button>
+<input id="repName" placeholder="اسم المندوب">
+<input id="repPhone" placeholder="رقم الهاتف">
+<input id="repArea" placeholder="المنطقة">
+<input id="repRate" type="number" placeholder="نسبة العمولة %">
+<button class="add" onclick="addRep()">إضافة مندوب</button>
 </div>
+<div class="box" id="repsList"></div>
 </section>
 
 <section id="cash" class="page">
 <h2>الصندوق</h2>
 <div class="cards">
-<div class="card">الرصيد الحالي<b>73,253,420 ل.س</b></div>
+<div class="card">الرصيد الحالي<b id="cashPageBalance">0 ل.س</b></div>
 </div>
 <div class="box">
-<input type="number" placeholder="المبلغ">
-<input placeholder="البيان">
-<button class="add">حفظ الحركة</button>
+<input id="cashAmount" type="number" placeholder="المبلغ">
+<input id="cashNote" placeholder="البيان">
+<select id="cashType">
+<option value="in">قبض</option>
+<option value="out">دفع</option>
+</select>
+<button class="add" onclick="saveCash()">حفظ الحركة</button>
 </div>
 </section>
 
@@ -144,12 +166,13 @@ footer{text-align:center;padding:25px;color:#778899}
 <h2>التقارير</h2>
 <div class="box">
 <table>
-<tr><th>التقرير</th><th>الحالة</th></tr>
-<tr><td>المبيعات</td><td>جاهز</td></tr>
-<tr><td>المشتريات</td><td>جاهز</td></tr>
-<tr><td>المخزون</td><td>جاهز</td></tr>
-<tr><td>العملاء والديون</td><td>جاهز</td></tr>
-<tr><td>المناديب والعمولات</td><td>جاهز</td></tr>
+<tr><th>التقرير</th><th>القيمة</th></tr>
+<tr><td>إجمالي المبيعات</td><td id="rSales">0</td></tr>
+<tr><td>إجمالي المشتريات</td><td id="rPurchases">0</td></tr>
+<tr><td>عدد الأصناف</td><td id="rStock">0</td></tr>
+<tr><td>عدد العملاء</td><td id="rCustomers">0</td></tr>
+<tr><td>عدد الموردين</td><td id="rSuppliers">0</td></tr>
+<tr><td>عدد المناديب</td><td id="rReps">0</td></tr>
 </table>
 </div>
 </section>
@@ -159,12 +182,296 @@ footer{text-align:center;padding:25px;color:#778899}
 <footer>مستودع العالمية لتجارة الادوية © 2026</footer>
 
 <script>
-function openPage(id,btn){
-document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-document.getElementById(id).classList.add('active');
-document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
-btn.classList.add('active');
+const DBKEY='alamiya_db_v2';
+
+let db=JSON.parse(localStorage.getItem(DBKEY) || '{}');
+
+db.drugs ||= [];
+db.sales ||= [];
+db.purchases ||= [];
+db.customers ||= [];
+db.suppliers ||= [];
+db.reps ||= [];
+db.cash ||= [];
+
+function saveDB(){
+  localStorage.setItem(DBKEY,JSON.stringify(db));
+  renderAll();
 }
+
+function money(n){
+  return Number(n||0).toLocaleString('en-US')+' ل.س';
+}
+
+function openPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function addDrug(){
+  let name=drugName.value.trim();
+  let qty=Number(drugQty.value);
+  if(!name || !qty){alert('أدخل اسم الدواء والكمية');return;}
+
+  let existing=db.drugs.find(d=>d.name===name && d.barcode===drugBarcode.value.trim());
+
+  if(existing){
+    existing.qty += qty;
+    existing.company=drugCompany.value.trim();
+    existing.expiry=drugExpiry.value;
+  }else{
+    db.drugs.push({
+      id:Date.now(),
+      name,
+      barcode:drugBarcode.value.trim(),
+      company:drugCompany.value.trim(),
+      qty,
+      expiry:drugExpiry.value
+    });
+  }
+
+  drugName.value='';
+  drugBarcode.value='';
+  drugCompany.value='';
+  drugQty.value='';
+  drugExpiry.value='';
+
+  saveDB();
+  alert('تمت إضافة الدواء بنجاح');
+}
+
+function saveSale(){
+  let customer=saleCustomer.value.trim();
+  let drugId=Number(saleDrug.value);
+  let qty=Number(saleQty.value);
+  let price=Number(salePrice.value);
+  let paid=Number(salePaid.value||0);
+
+  let drug=db.drugs.find(d=>d.id===drugId);
+
+  if(!customer || !drug || qty<=0 || price<=0){
+    alert('أكمل بيانات الفاتورة');
+    return;
+  }
+
+  if(drug.qty < qty){
+    alert('الكمية الموجودة في المخزون غير كافية');
+    return;
+  }
+
+  drug.qty -= qty;
+
+  db.sales.push({
+    id:Date.now(),
+    date:new Date().toISOString(),
+    customer,
+    drug:drug.name,
+    qty,
+    price,
+    total:qty*price,
+    paid
+  });
+
+  if(!db.customers.find(c=>c.name===customer)){
+    db.customers.push({id:Date.now()+1,name:customer,phone:''});
+  }
+
+  db.cash.push({
+    id:Date.now()+2,
+    type:'in',
+    amount:paid,
+    note:'دفعة فاتورة بيع - '+customer
+  });
+
+  saleCustomer.value='';
+  saleQty.value='';
+  salePrice.value='';
+  salePaid.value='';
+
+  saveDB();
+  alert('تم حفظ فاتورة البيع');
+}
+
+function savePurchase(){
+  let supplier=purchaseSupplier.value.trim();
+  let name=purchaseDrug.value.trim();
+  let qty=Number(purchaseQty.value);
+  let price=Number(purchasePrice.value);
+  let paid=Number(purchasePaid.value||0);
+
+  if(!supplier || !name || qty<=0 || price<=0){
+    alert('أكمل بيانات الفاتورة');
+    return;
+  }
+
+  let drug=db.drugs.find(d=>d.name===name);
+
+  if(drug){
+    drug.qty += qty;
+  }else{
+    db.drugs.push({
+      id:Date.now(),
+      name,
+      barcode:'',
+      company:'',
+      qty,
+      expiry:''
+    });
+  }
+
+  db.purchases.push({
+    id:Date.now()+1,
+    date:new Date().toISOString(),
+    supplier,
+    drug:name,
+    qty,
+    price,
+    total:qty*price,
+    paid
+  });
+
+  if(!db.suppliers.find(s=>s.name===supplier)){
+    db.suppliers.push({id:Date.now()+2,name:supplier,phone:''});
+  }
+
+  db.cash.push({
+    id:Date.now()+3,
+    type:'out',
+    amount:paid,
+    note:'دفعة فاتورة شراء - '+supplier
+  });
+
+  saveDB();
+  alert('تم حفظ فاتورة الشراء');
+}
+
+function addCustomer(){
+  let name=customerName.value.trim();
+  if(!name){alert('أدخل اسم العميل');return;}
+  db.customers.push({id:Date.now(),name,phone:customerPhone.value.trim()});
+  customerName.value='';
+  customerPhone.value='';
+  saveDB();
+}
+
+function addSupplier(){
+  let name=supplierName.value.trim();
+  if(!name){alert('أدخل اسم المورد');return;}
+  db.suppliers.push({id:Date.now(),name,phone:supplierPhone.value.trim()});
+  supplierName.value='';
+  supplierPhone.value='';
+  saveDB();
+}
+
+function addRep(){
+  let name=repName.value.trim();
+  if(!name){alert('أدخل اسم المندوب');return;}
+  db.reps.push({
+    id:Date.now(),
+    name,
+    phone:repPhone.value.trim(),
+    area:repArea.value.trim(),
+    rate:Number(repRate.value||0)
+  });
+  repName.value='';
+  repPhone.value='';
+  repArea.value='';
+  repRate.value='';
+  saveDB();
+}
+
+function saveCash(){
+  let amount=Number(cashAmount.value);
+  if(amount<=0){alert('أدخل المبلغ');return;}
+  db.cash.push({
+    id:Date.now(),
+    type:cashType.value,
+    amount,
+    note:cashNote.value.trim()
+  });
+  cashAmount.value='';
+  cashNote.value='';
+  saveDB();
+}
+
+function renderAll(){
+  stockTable.innerHTML=db.drugs.map(d=>`
+    <tr>
+      <td>${d.name}</td>
+      <td>${d.company||'-'}</td>
+      <td>${d.qty}</td>
+      <td>${d.expiry||'-'}</td>
+    </tr>`).join('');
+
+  saleDrug.innerHTML='<option value="">اختر الدواء</option>'+
+    db.drugs.map(d=>`<option value="${d.id}">${d.name} - متوفر ${d.qty}</option>`).join('');
+
+  salesTable.innerHTML=db.sales.slice().reverse().map(s=>`
+    <tr>
+      <td>${s.customer}</td>
+      <td>${s.drug}</td>
+      <td>${s.qty}</td>
+      <td>${money(s.total)}</td>
+      <td>${money(s.paid)}</td>
+    </tr>`).join('');
+
+  customersList.innerHTML=db.customers.length
+    ? db.customers.map(c=>`<div>${c.name} - ${c.phone||'بدون رقم'}</div>`).join('<hr>')
+    : 'لا يوجد عملاء';
+
+  suppliersList.innerHTML=db.suppliers.length
+    ? db.suppliers.map(s=>`<div>${s.name} - ${s.phone||'بدون رقم'}</div>`).join('<hr>')
+    : 'لا يوجد موردون';
+
+  repsList.innerHTML=db.reps.length
+    ? db.reps.map(r=>`<div>${r.name} - ${r.area||'-'} - عمولة ${r.rate}%</div>`).join('<hr>')
+    : 'لا يوجد مناديب';
+
+  let totalSalesValue=db.sales.reduce((a,s)=>a+s.total,0);
+  let totalPurchasesValue=db.purchases.reduce((a,p)=>a+p.total,0);
+  let totalPaidSales=db.sales.reduce((a,s)=>a+s.paid,0);
+  let totalPaidPurchases=db.purchases.reduce((a,p)=>a+p.paid,0);
+
+  let customerDebtValue=totalSalesValue-totalPaidSales;
+  let supplierDebtValue=totalPurchasesValue-totalPaidPurchases;
+
+  let cashValue=db.cash.reduce((a,c)=>a+(c.type==='in'?c.amount:-c.amount),0);
+
+  let today=new Date().toISOString().slice(0,10);
+  let todaySalesValue=db.sales
+    .filter(s=>s.date.slice(0,10)===today)
+    .reduce((a,s)=>a+s.total,0);
+
+  let soon=Date.now()+90*24*60*60*1000;
+  let expiry=db.drugs.filter(d=>{
+    if(!d.expiry)return false;
+    let t=new Date(d.expiry).getTime();
+    return t>=Date.now() && t<=soon;
+  }).length;
+
+  let commissions=db.reps.reduce((a,r)=>a+r.rate,0);
+
+  todaySales.textContent=money(todaySalesValue);
+  totalSales.textContent=money(totalSalesValue);
+  customerDebt.textContent=money(customerDebtValue);
+  supplierDebt.textContent=money(supplierDebtValue);
+  cashBalance.textContent=money(cashValue);
+  cashPageBalance.textContent=money(cashValue);
+  itemsCount.textContent=db.drugs.length;
+  expiryCount.textContent=expiry;
+  repCommission.textContent=commissions+' %';
+
+  rSales.textContent=money(totalSalesValue);
+  rPurchases.textContent=money(totalPurchasesValue);
+  rStock.textContent=db.drugs.length;
+  rCustomers.textContent=db.customers.length;
+  rSuppliers.textContent=db.suppliers.length;
+  rReps.textContent=db.reps.length;
+}
+
+renderAll();
 </script>
 
 </body>
