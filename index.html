@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#073b70">
+<title>مستودع العالمية لتجارة الادوية</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,Tahoma;background:#f3f6fb;color:#18324f}
+header{background:#073b70;color:#fff;padding:18px;text-align:center}
+header h2{margin:0 0 5px}
+nav{display:flex;overflow:auto;background:#fff;padding:8px;gap:6px;box-shadow:0 2px 8px #0002;position:sticky;top:0}
+nav button{border:0;padding:10px 13px;border-radius:9px;background:#e8f1fb;color:#073b70;white-space:nowrap;font-weight:bold}
+nav button.active{background:#087bea;color:white}
+main{padding:14px}
+.page{display:none}.page.active{display:block}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.card{background:white;padding:16px;border-radius:15px;box-shadow:0 3px 12px #0001}
+.card b{display:block;font-size:20px;margin-top:9px}
+.green{color:#079868}.red{color:#d62332}.blue{color:#2455cf}.orange{color:#d57800}
+.box{background:#fff;border-radius:15px;padding:14px;margin-top:12px}
+input{width:100%;padding:12px;margin:5px 0;border:1px solid #ccd7e4;border-radius:9px}
+button.add{width:100%;padding:12px;border:0;border-radius:10px;background:#0a9b69;color:#fff;font-weight:bold;margin-top:7px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+td,th{padding:9px;border-bottom:1px solid #eee;text-align:right}
+footer{text-align:center;padding:25px;color:#778899}
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>مستودع العالمية لتجارة الادوية</h2>
+<div>برنامج المحاسبة وإدارة المستودع</div>
+</header>
+
+<nav>
+<button class="active" onclick="openPage('home',this)">الرئيسية</button>
+<button onclick="openPage('sales',this)">المبيعات</button>
+<button onclick="openPage('purchases',this)">المشتريات</button>
+<button onclick="openPage('stock',this)">المخزون</button>
+<button onclick="openPage('customers',this)">العملاء</button>
+<button onclick="openPage('suppliers',this)">الموردين</button>
+<button onclick="openPage('reps',this)">المناديب</button>
+<button onclick="openPage('cash',this)">الصندوق</button>
+<button onclick="openPage('reports',this)">التقارير</button>
+</nav>
+
+<main>
+
+<section id="home" class="page active">
+<h2>لوحة المعلومات</h2>
+
+<div class="cards">
+<div class="card">مبيعات اليوم<b class="green">0 ل.س</b></div>
+<div class="card">مبيعات الشهر<b class="green">16,957,399 ل.س</b></div>
+<div class="card">ديون العملاء<b class="blue">88,760,282 ل.س</b></div>
+<div class="card">مستحقات الموردين<b class="red">16,686,812 ل.س</b></div>
+<div class="card">رصيد الصندوق<b>73,253,420 ل.س</b></div>
+<div class="card">الأصناف<b>960</b></div>
+<div class="card">قرب انتهاء الصلاحية<b class="red">179</b></div>
+<div class="card">عمولات المناديب<b class="orange">2,613,811 ل.س</b></div>
+</div>
+</section>
+
+<section id="sales" class="page">
+<h2>المبيعات</h2>
+<div class="box">
+<input placeholder="اسم العميل">
+<input placeholder="اسم الدواء">
+<input type="number" placeholder="الكمية">
+<input type="number" placeholder="سعر البيع">
+<input type="number" placeholder="المدفوع">
+<button class="add" onclick="alert('تم حفظ الفاتورة التجريبية')">حفظ فاتورة البيع</button>
+</div>
+</section>
+
+<section id="purchases" class="page">
+<h2>المشتريات</h2>
+<div class="box">
+<input placeholder="اسم المورد">
+<input placeholder="اسم الدواء">
+<input type="number" placeholder="الكمية">
+<input type="number" placeholder="سعر الشراء">
+<button class="add">حفظ فاتورة الشراء</button>
+</div>
+</section>
+
+<section id="stock" class="page">
+<h2>المخزون الدوائي</h2>
+<div class="box">
+<input placeholder="اسم الدواء">
+<input placeholder="الباركود">
+<input placeholder="الشركة">
+<input type="number" placeholder="الكمية">
+<input type="date">
+<button class="add">إضافة الدواء</button>
+</div>
+</section>
+
+<section id="customers" class="page">
+<h2>العملاء</h2>
+<div class="box">
+<input placeholder="اسم العميل">
+<input placeholder="رقم الهاتف">
+<button class="add">إضافة عميل</button>
+</div>
+</section>
+
+<section id="suppliers" class="page">
+<h2>الموردون</h2>
+<div class="box">
+<input placeholder="اسم المورد">
+<input placeholder="رقم الهاتف">
+<button class="add">إضافة مورد</button>
+</div>
+</section>
+
+<section id="reps" class="page">
+<h2>المناديب</h2>
+<div class="box">
+<input placeholder="اسم المندوب">
+<input placeholder="رقم الهاتف">
+<input placeholder="المنطقة">
+<input type="number" placeholder="نسبة العمولة %">
+<button class="add">إضافة مندوب</button>
+</div>
+</section>
+
+<section id="cash" class="page">
+<h2>الصندوق</h2>
+<div class="cards">
+<div class="card">الرصيد الحالي<b>73,253,420 ل.س</b></div>
+</div>
+<div class="box">
+<input type="number" placeholder="المبلغ">
+<input placeholder="البيان">
+<button class="add">حفظ الحركة</button>
+</div>
+</section>
+
+<section id="reports" class="page">
+<h2>التقارير</h2>
+<div class="box">
+<table>
+<tr><th>التقرير</th><th>الحالة</th></tr>
+<tr><td>المبيعات</td><td>جاهز</td></tr>
+<tr><td>المشتريات</td><td>جاهز</td></tr>
+<tr><td>المخزون</td><td>جاهز</td></tr>
+<tr><td>العملاء والديون</td><td>جاهز</td></tr>
+<tr><td>المناديب والعمولات</td><td>جاهز</td></tr>
+</table>
+</div>
+</section>
+
+</main>
+
+<footer>مستودع العالمية لتجارة الادوية © 2026</footer>
+
+<script>
+function openPage(id,btn){
+document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+document.getElementById(id).classList.add('active');
+document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));
+btn.classList.add('active');
+}
+</script>
+
+</body>
+</html>
