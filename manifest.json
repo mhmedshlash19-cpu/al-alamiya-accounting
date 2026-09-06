@@ -1,0 +1,12 @@
+{
+  "name": "مستودع العالمية لتجارة الأدوية",
+  "short_name": "العالمية",
+  "description": "برنامج إدارة ومحاسبة مستودع العالمية لتجارة الأدوية",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#087f5b",
+  "lang": "ar",
+  "dir": "rtl"
+}
