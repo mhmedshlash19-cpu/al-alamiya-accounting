@@ -2770,3 +2770,1021 @@ renderAll();
 
 </body>
 </html>
+<!-- =====================================================
+     آخر تعديلات مستودع العالمية
+     المرتجعات + PDF واتساب
+===================================================== -->
+
+<!-- مكتبات إنشاء PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+.return-box{
+  direction:rtl;
+  background:#fff;
+  border-radius:15px;
+  padding:15px;
+  margin:15px 0;
+  box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+
+.return-box input,
+.return-box select,
+.return-box textarea{
+  width:100%;
+  padding:10px;
+  margin:5px 0;
+  border:1px solid #ddd;
+  border-radius:9px;
+  box-sizing:border-box;
+}
+
+.return-btn{
+  border:0;
+  border-radius:9px;
+  padding:10px 15px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.return-green{
+  background:#079669;
+  color:#fff;
+}
+
+.return-red{
+  background:#dc3545;
+  color:white;
+}
+
+.return-gray{
+  background:#e9ecef;
+}
+
+.return-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:12px;
+}
+
+.return-table th,
+.return-table td{
+  border-bottom:1px solid #eee;
+  padding:9px;
+  text-align:right;
+}
+
+#returnModalNew{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  z-index:99999;
+  overflow:auto;
+  padding:15px;
+}
+
+.return-modal-content{
+  max-width:950px;
+  margin:20px auto;
+  background:#f6f7f9;
+  padding:15px;
+  border-radius:15px;
+}
+
+.pdf-wa-btn{
+  background:#25D366;
+  color:#fff;
+  border:0;
+  border-radius:9px;
+  padding:10px 15px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+#invoicePdfArea{
+  position:fixed;
+  left:-99999px;
+  top:0;
+  width:750px;
+  direction:rtl;
+  background:white;
+  padding:35px;
+  color:#111;
+  font-family:Arial,Tahoma,sans-serif;
+}
+
+.pdf-table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.pdf-table th,
+.pdf-table td{
+  border:1px solid #bbb;
+  padding:8px;
+  text-align:center;
+}
+</style>
+
+
+<!-- =========================
+     نافذة فاتورة المرتجع
+========================= -->
+
+<div id="returnModalNew">
+
+<div class="return-modal-content">
+
+  <div class="return-box">
+
+    <h2>فاتورة مرتجع جديدة</h2>
+
+    <label>اسم الصيدلية *</label>
+    <select id="newReturnCustomer">
+      <option value="">اختر الصيدلية</option>
+    </select>
+
+    <label>التاريخ</label>
+    <input type="date" id="newReturnDate">
+
+    <label>رقم فاتورة البيع الأصلية</label>
+    <input
+      type="text"
+      id="newReturnOriginal"
+      placeholder="اختياري">
+
+  </div>
+
+
+  <div class="return-box">
+
+    <h3>الأصناف المرتجعة</h3>
+
+    <button
+      class="return-btn return-green"
+      onclick="addNewReturnLine()">
+      + إضافة صنف
+    </button>
+
+    <div style="overflow:auto">
+
+      <table class="return-table">
+
+        <thead>
+          <tr>
+            <th>الصنف</th>
+            <th>الكمية</th>
+            <th>السعر</th>
+            <th>السبب</th>
+            <th>الإجمالي</th>
+            <th></th>
+          </tr>
+        </thead>
+
+        <tbody id="newReturnLines"></tbody>
+
+      </table>
+
+    </div>
+
+    <h3>
+      إجمالي المرتجع:
+      <span id="newReturnTotal">0.00</span>
+    </h3>
+
+  </div>
+
+
+  <div class="return-box">
+
+    <label>ملاحظة</label>
+
+    <textarea
+      id="newReturnNote"
+      rows="3"></textarea>
+
+    <br><br>
+
+    <button
+      class="return-btn return-green"
+      onclick="saveNewReturn()">
+      حفظ فاتورة المرتجع
+    </button>
+
+    <button
+      class="return-btn return-gray"
+      onclick="closeNewReturn()">
+      إلغاء
+    </button>
+
+  </div>
+
+</div>
+</div>
+
+
+<!-- مكان تجهيز الفاتورة PDF -->
+<div id="invoicePdfArea"></div>
+
+
+<script>
+
+/* =========================================
+   التأكد من البيانات
+========================================= */
+
+if(typeof db === "undefined"){
+  window.db =
+    JSON.parse(
+      localStorage.getItem("alamiyaDB") || "{}"
+    );
+}
+
+db.items = Array.isArray(db.items) ? db.items : [];
+db.customers = Array.isArray(db.customers) ? db.customers : [];
+db.invoices = Array.isArray(db.invoices) ? db.invoices : [];
+db.returns = Array.isArray(db.returns) ? db.returns : [];
+
+let newReturnRows = [];
+
+
+/* =========================================
+   حفظ قاعدة البيانات
+========================================= */
+
+function saveNewChanges(){
+
+  if(typeof saveDB === "function"){
+    saveDB();
+  }else{
+    localStorage.setItem(
+      "alamiyaDB",
+      JSON.stringify(db)
+    );
+  }
+
+}
+
+
+/* =========================================
+   فتح فاتورة المرتجع
+========================================= */
+
+function openNewReturn(){
+
+  newReturnRows = [];
+
+  document.getElementById(
+    "returnModalNew"
+  ).style.display = "block";
+
+  document.getElementById(
+    "newReturnDate"
+  ).value =
+    new Date().toISOString().slice(0,10);
+
+  loadNewReturnCustomers();
+
+  addNewReturnLine();
+
+}
+
+
+/* =========================================
+   إغلاق المرتجع
+========================================= */
+
+function closeNewReturn(){
+
+  document.getElementById(
+    "returnModalNew"
+  ).style.display = "none";
+
+}
+
+
+/* =========================================
+   الصيدليات
+========================================= */
+
+function loadNewReturnCustomers(){
+
+  const s =
+    document.getElementById(
+      "newReturnCustomer"
+    );
+
+  s.innerHTML =
+    '<option value="">اختر الصيدلية</option>';
+
+  db.customers.forEach(c=>{
+
+    s.innerHTML += `
+      <option value="${c.id}">
+        ${c.name || c.pharmacyName || ""}
+      </option>
+    `;
+
+  });
+
+}
+
+
+/* =========================================
+   إضافة صنف مرتجع
+========================================= */
+
+function addNewReturnLine(){
+
+  newReturnRows.push({
+    itemId:"",
+    qty:1,
+    price:0,
+    reason:"مرتجع من الصيدلية"
+  });
+
+  renderNewReturnLines();
+
+}
+
+
+/* =========================================
+   حذف صنف
+========================================= */
+
+function deleteNewReturnLine(i){
+
+  newReturnRows.splice(i,1);
+
+  if(newReturnRows.length===0){
+    addNewReturnLine();
+  }else{
+    renderNewReturnLines();
+  }
+
+}
+
+
+/* =========================================
+   عرض الأصناف
+========================================= */
+
+function renderNewReturnLines(){
+
+  const body =
+    document.getElementById(
+      "newReturnLines"
+    );
+
+  body.innerHTML = "";
+
+  newReturnRows.forEach((r,i)=>{
+
+    let options =
+      '<option value="">اختر الصنف</option>';
+
+    db.items.forEach(item=>{
+
+      let selected =
+        String(item.id) === String(r.itemId)
+        ? "selected"
+        : "";
+
+      options += `
+        <option
+          value="${item.id}"
+          ${selected}>
+          ${item.name || "صنف"}
+        </option>
+      `;
+
+    });
+
+    let total =
+      Number(r.qty||0) *
+      Number(r.price||0);
+
+    body.innerHTML += `
+
+      <tr>
+
+        <td>
+          <select
+            onchange="selectNewReturnItem(${i},this.value)">
+            ${options}
+          </select>
+        </td>
+
+        <td>
+          <input
+            type="number"
+            min="1"
+            value="${r.qty}"
+            oninput="
+              newReturnRows[${i}].qty =
+              Number(this.value);
+              calcNewReturn();
+            ">
+        </td>
+
+        <td>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value="${r.price}"
+            oninput="
+              newReturnRows[${i}].price =
+              Number(this.value);
+              calcNewReturn();
+            ">
+        </td>
+
+        <td>
+          <select
+            onchange="
+              newReturnRows[${i}].reason =
+              this.value;
+            ">
+
+            <option>مرتجع من الصيدلية</option>
+            <option>خطأ في الطلب</option>
+            <option>تالف</option>
+            <option>منتهي الصلاحية</option>
+            <option>أخرى</option>
+
+          </select>
+        </td>
+
+        <td id="newRetTotal${i}">
+          ${total.toFixed(2)}
+        </td>
+
+        <td>
+          <button
+            class="return-btn return-red"
+            onclick="deleteNewReturnLine(${i})">
+            حذف
+          </button>
+        </td>
+
+      </tr>
+    `;
+
+  });
+
+  calcNewReturn();
+
+}
+
+
+/* =========================================
+   اختيار الصنف
+========================================= */
+
+function selectNewReturnItem(index,id){
+
+  let item =
+    db.items.find(
+      x => String(x.id) === String(id)
+    );
+
+  newReturnRows[index].itemId = id;
+
+  if(item){
+
+    newReturnRows[index].price =
+      Number(
+        item.price ??
+        item.salePrice ??
+        0
+      );
+
+  }
+
+  renderNewReturnLines();
+
+}
+
+
+/* =========================================
+   إجمالي المرتجع
+========================================= */
+
+function calcNewReturn(){
+
+  let total = 0;
+
+  newReturnRows.forEach((r,i)=>{
+
+    let line =
+      Number(r.qty||0) *
+      Number(r.price||0);
+
+    total += line;
+
+    let el =
+      document.getElementById(
+        "newRetTotal"+i
+      );
+
+    if(el){
+      el.textContent =
+        line.toFixed(2);
+    }
+
+  });
+
+  document.getElementById(
+    "newReturnTotal"
+  ).textContent =
+    total.toFixed(2);
+
+}
+
+
+/* =========================================
+   حفظ فاتورة المرتجع
+========================================= */
+
+function saveNewReturn(){
+
+  const customerId =
+    document.getElementById(
+      "newReturnCustomer"
+    ).value;
+
+  if(!customerId){
+
+    alert("يرجى اختيار اسم الصيدلية");
+    return;
+
+  }
+
+  const customer =
+    db.customers.find(
+      x =>
+      String(x.id) ===
+      String(customerId)
+    );
+
+  const valid =
+    newReturnRows.filter(
+      r =>
+      r.itemId &&
+      Number(r.qty)>0
+    );
+
+  if(valid.length===0){
+
+    alert("يرجى إضافة صنف مرتجع");
+    return;
+
+  }
+
+  let lines = [];
+  let total = 0;
+
+  valid.forEach(r=>{
+
+    let item =
+      db.items.find(
+        x =>
+        String(x.id) ===
+        String(r.itemId)
+      );
+
+    if(!item) return;
+
+    let qty =
+      Number(r.qty||0);
+
+    let price =
+      Number(r.price||0);
+
+    let lineTotal =
+      qty * price;
+
+    total += lineTotal;
+
+    lines.push({
+
+      itemId:item.id,
+
+      name:item.name || "صنف",
+
+      qty:qty,
+
+      price:price,
+
+      total:lineTotal,
+
+      reason:r.reason
+
+    });
+
+
+    /* إعادة الكمية للمخزون */
+
+    if(item.qty !== undefined){
+
+      item.qty =
+        Number(item.qty||0) + qty;
+
+    }else if(item.stock !== undefined){
+
+      item.stock =
+        Number(item.stock||0) + qty;
+
+    }else{
+
+      item.qty = qty;
+
+    }
+
+  });
+
+
+  const num =
+    "RET-" +
+    String(
+      db.returns.length + 1
+    ).padStart(5,"0");
+
+
+  db.returns.unshift({
+
+    id:Date.now(),
+
+    number:num,
+
+    date:
+      document.getElementById(
+        "newReturnDate"
+      ).value,
+
+    customerId:customerId,
+
+    customerName:
+      customer
+      ? customer.name || customer.pharmacyName
+      : "",
+
+    originalInvoice:
+      document.getElementById(
+        "newReturnOriginal"
+      ).value,
+
+    lines:lines,
+
+    total:total,
+
+    note:
+      document.getElementById(
+        "newReturnNote"
+      ).value,
+
+    status:"محفوظ"
+
+  });
+
+
+  saveNewChanges();
+
+  closeNewReturn();
+
+
+  if(typeof renderReturns === "function"){
+    renderReturns();
+  }
+
+  if(typeof renderAll === "function"){
+    renderAll();
+  }
+
+  alert(
+    "تم حفظ فاتورة المرتجع بنجاح ✅\n" +
+    num
+  );
+
+}
+
+
+/* =================================================
+   PDF واتساب لفاتورة البيع
+================================================= */
+
+async function invoicePDFWhatsApp(invoiceId){
+
+  const invoice =
+    db.invoices.find(
+      x =>
+      String(x.id) ===
+      String(invoiceId)
+    );
+
+  if(!invoice){
+
+    alert("لم يتم العثور على الفاتورة");
+    return;
+
+  }
+
+
+  let customer =
+    db.customers.find(
+      x =>
+      String(x.id) ===
+      String(invoice.customerId)
+    );
+
+
+  let pharmacyName =
+    invoice.customerName ||
+    customer?.name ||
+    customer?.pharmacyName ||
+    "";
+
+
+  let lines =
+    invoice.lines || [];
+
+
+  let itemsHTML = "";
+
+
+  lines.forEach((line,index)=>{
+
+    itemsHTML += `
+
+      <tr>
+
+        <td>${index+1}</td>
+
+        <td>
+          ${line.name || ""}
+        </td>
+
+        <td>
+          ${Number(line.qty||0)}
+        </td>
+
+        <td>
+          ${Number(line.bonus||0)}
+        </td>
+
+        <td>
+          ${Number(line.price||0).toFixed(2)}
+        </td>
+
+        <td>
+          ${(
+            Number(line.qty||0) *
+            Number(line.price||0)
+          ).toFixed(2)}
+        </td>
+
+      </tr>
+
+    `;
+
+  });
+
+
+  const invoiceNumber =
+    invoice.number ||
+    invoice.id ||
+    "";
+
+
+  const total =
+    Number(invoice.total||0);
+
+
+  const commission =
+    Number(
+      invoice.commissionTotal || 0
+    );
+
+
+  const area =
+    document.getElementById(
+      "invoicePdfArea"
+    );
+
+
+  area.innerHTML = `
+
+    <div style="text-align:center">
+
+      <h1>
+        مستودع العالمية لتجارة الأدوية
+      </h1>
+
+      <h2>فاتورة مبيعات</h2>
+
+    </div>
+
+    <hr>
+
+    <p>
+      <strong>رقم الفاتورة:</strong>
+      ${invoiceNumber}
+    </p>
+
+    <p>
+      <strong>التاريخ:</strong>
+      ${invoice.date || ""}
+    </p>
+
+    <p>
+      <strong>الصيدلية:</strong>
+      ${pharmacyName}
+    </p>
+
+
+    <table class="pdf-table">
+
+      <thead>
+
+        <tr>
+          <th>#</th>
+          <th>الصنف</th>
+          <th>الكمية</th>
+          <th>بونص</th>
+          <th>السعر</th>
+          <th>الإجمالي</th>
+        </tr>
+
+      </thead>
+
+      <tbody>
+        ${itemsHTML}
+      </tbody>
+
+    </table>
+
+
+    <div
+      style="
+      margin-top:25px;
+      font-size:20px;
+      text-align:left;
+      ">
+
+      <p>
+        <strong>
+          إجمالي الفاتورة:
+          ${total.toFixed(2)}
+        </strong>
+      </p>
+
+      ${
+        commission > 0
+        ?
+        `
+        <p>
+          إجمالي عمولة المندوب:
+          ${commission.toFixed(2)}
+        </p>
+        `
+        :
+        ""
+      }
+
+    </div>
+
+  `;
+
+
+  try{
+
+    const canvas =
+      await html2canvas(
+        area,
+        {
+          scale:2,
+          backgroundColor:"#ffffff"
+        }
+      );
+
+
+    const img =
+      canvas.toDataURL(
+        "image/jpeg",
+        0.95
+      );
+
+
+    const {
+      jsPDF
+    } =
+      window.jspdf;
+
+
+    const pdf =
+      new jsPDF(
+        "p",
+        "mm",
+        "a4"
+      );
+
+
+    const pageWidth =
+      pdf.internal.pageSize.getWidth();
+
+    const pageHeight =
+      (
+        canvas.height *
+        pageWidth
+      ) /
+      canvas.width;
+
+
+    pdf.addImage(
+      img,
+      "JPEG",
+      0,
+      0,
+      pageWidth,
+      pageHeight
+    );
+
+
+    const blob =
+      pdf.output("blob");
+
+
+    const file =
+      new File(
+        [blob],
+        "invoice-" +
+        invoiceNumber +
+        ".pdf",
+        {
+          type:"application/pdf"
+        }
+      );
+
+
+    /*
+      على الهاتف:
+      ستظهر شاشة المشاركة،
+      ومنها تختار واتساب.
+    */
+
+    if(
+      navigator.share &&
+      navigator.canShare &&
+      navigator.canShare({
+        files:[file]
+      })
+    ){
+
+      await navigator.share({
+
+        title:
+          "فاتورة " +
+          invoiceNumber,
+
+        files:[file]
+
+      });
+
+    }else{
+
+      /*
+        إذا لم يدعم الجهاز مشاركة الملف،
+        يتم تنزيل PDF.
+      */
+
+      pdf.save(
+        "invoice-" +
+        invoiceNumber +
+        ".pdf"
+      );
+
+      alert(
+        "تم تجهيز ملف PDF.\n" +
+        "يمكنك إرساله عبر واتساب."
+      );
+
+    }
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "تعذر إنشاء PDF، حاول مرة أخرى."
+    );
+
+  }
+
+}
+
+</script>
+
+<!-- نهاية آخر التعديلات -->
