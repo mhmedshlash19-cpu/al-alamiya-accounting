@@ -470,6 +470,29 @@ function renderAll(){
   rSuppliers.textContent=db.suppliers.length;
   rReps.textContent=db.reps.length;
 }
+rReps.textContent=db.reps.length;
+}
+
+
+// نظام تسجيل الدخول
+let users=[
+ {name:"المدير",pass:"1234",role:"admin"},
+ {name:"الموظف",pass:"1111",role:"user"}
+];
+
+function login(){
+ let u=prompt("اسم المستخدم");
+ let p=prompt("كلمة المرور");
+
+ let account=users.find(x=>x.name==u && x.pass==p);
+
+ if(account){
+   alert("تم الدخول بنجاح - "+account.role);
+ }else{
+   alert("بيانات الدخول غير صحيحة");
+ }
+}
+
 
 renderAll();
 </script>
