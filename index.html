@@ -1058,8 +1058,16 @@ th{
 <div class="card actions">
 
 <button class="btn btn-green" onclick="openCustomerModal()">
-+ صيدلية جديدة
++ صيدلية جديدة</button>
+<button class="btn btn-blue" onclick="document.getElementById('customersExcelFile').click()">
+  📥 استيراد من Excel
 </button>
+
+<input type="file"
+       id="customersExcelFile"
+       accept=".xlsx,.xls"
+       style="display:none"
+       onchange="importCustomersExcel(event)">
 
 </div>
 
@@ -4227,7 +4235,77 @@ if ("serviceWorker" in navigator) {
       });
   });
 }
-</script>
+async function importCustomersExcel(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data);
+
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+        if (!rows.length) {
+            alert("ملف Excel فارغ");
+            return;
+        }
+
+        let imported = 0;
+
+        rows.forEach(row => {
+            const name =
+                row["الصيدلية"] ||
+                row["اسم الصيدلية"] ||
+                row["الاسم"] ||
+                row["name"] ||
+                "";
+
+            const phone =
+                row["الهاتف"] ||
+                row["رقم الهاتف"] ||
+                row["phone"] ||
+                "";
+
+            const discount = Number(
+                row["الخصم"] ||
+                row["نسبة الخصم"] ||
+                row["discount"] ||
+                0
+            );
+
+            const creditLimit = Number(
+                row["حد الدين"] ||
+                row["سقف الدين"] ||
+                row["creditLimit"] ||
+                0
+            );
+
+            if (!name) return;
+
+            customers.push({
+                id: Date.now() + Math.random(),
+                name: String(name).trim(),
+                phone: String(phone).trim(),
+                discount: discount || 0,
+                creditLimit: creditLimit || 0
+            });
+
+            imported++;
+        });
+
+        saveData();
+        renderCustomers();
+
+        alert("تم استيراد " + imported + " صيدلية بنجاح");
+
+    } catch (error) {
+        console.error(error);
+        alert("حدث خطأ أثناء استيراد ملف Excel");
+    }
+
+    event.target.value = "";
+} </script>
 
 </body>
 </html>
