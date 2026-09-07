@@ -1970,7 +1970,7 @@ function renderSale(){
       <td>
   <input type="number" min="1"
   value="${Number(r.qty||1)}"
-  oninput="
+  onchange="
     sale[${i}].qty=Number(this.value||0);
 const item=db.items.find(x=>x.id===sale[${i}].itemId);
 
