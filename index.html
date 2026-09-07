@@ -3743,7 +3743,16 @@ function importItemsExcel(input){
 
           companyId=company.id;
         }
+const offerText=String(
+  row["العرض"] ||
+  row["offer"] ||
+  ""
+).trim();
 
+const offerMatch=offerText.match(/(\d+)\s*\+\s*(\d+)/);
+
+const offerBuy=offerMatch ? Number(offerMatch[1]) : 0;
+const offerFree=offerMatch ? Number(offerMatch[2]) : 0;
         db.items.push({
 
           id:uid(),
@@ -3802,15 +3811,18 @@ function importItemsExcel(input){
           ?Number(row["عمولة المندوب %"])
           :null,
 
-          buyQty:Number(
-            row["شراء العرض"] ||
-            row["buyQty"] ||
-            0
-          ),
+          
+buyQty:Number(
+  row["شراء العرض"] ||
+  row["buyQty"] ||
+  offerBuy ||
+  0
+),
 
           freeQty:Number(
             row["بونص العرض"] ||
             row["freeQty"] ||
+     offerFree ||  
             0
           ),
 
