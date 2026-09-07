@@ -1914,7 +1914,14 @@ function selectSaleItem(i,id){
       buy=Number(c?.buyQty||0);
       free=Number(c?.freeQty||0);
     }
-
+// قراءة العرض مثل 10+3
+if(!buy && item.offer){
+  const m=String(item.offer).match(/(\d+)\s*\+\s*(\d+)/);
+  if(m){
+    buy=Number(m[1]);
+    free=Number(m[2]);
+  }
+    }
     if(buy>0){
       sale[i].bonus=
       Math.floor(Number(sale[i].qty||0)/buy)*free;
