@@ -1972,11 +1972,26 @@ function renderSale(){
   value="${Number(r.qty||1)}"
   oninput="
     sale[${i}].qty=Number(this.value||0);
-    if(sale[${i}].itemId){
-      selectSaleItem(${i},sale[${i}].itemId);
-    }else{
-      calculateSale();
-    }
+const item=db.items.find(x=>x.id===sale[${i}].itemId);
+
+if(item){
+  let buy=Number(item.buyQty||0);
+  let free=Number(item.freeQty||0);
+
+  if(!buy){
+    const c=db.companies.find(x=>x.id===item.companyId);
+    buy=Number(c?.buyQty||0);
+    free=Number(c?.freeQty||0);
+  }
+
+  if(buy>0){
+    sale[${i}].bonus=
+      Math.floor(Number(sale[${i}].qty||0)/buy)*free;
+      this.closest('tr').querySelector('input[type="number"][min="0"]').value=sale[${i}].bonus;
+  }
+}
+
+calculateSale();
   ">
       </td>
 
