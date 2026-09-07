@@ -4715,5 +4715,572 @@ async function importCustomersPDF(event){
 }
 
 </script>
+  <script>
+/* =========================================================
+   إضافة OCR لقراءة PDF المصوّر
+   إضافة فقط - لا تحذف أي كود سابق
+   ========================================================= */
+
+async function loadTesseractOCR(){
+  if(window.Tesseract) return;
+
+  await new Promise((resolve,reject)=>{
+    const s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+    s.onload=resolve;
+    s.onerror=()=>reject(new Error("تعذر تحميل مكتبة OCR"));
+    document.head.appendChild(s);
+  });
+}
+
+function ocrNormalizeDigits(value){
+  return String(value || "")
+    .replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d))
+    .replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d));
+}
+
+function ocrCleanBalance(value){
+  let s=ocrNormalizeDigits(value)
+    .replace(/[^\d,.-]/g,"")
+    .replace(/,/g,"");
+
+  const n=parseFloat(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function ocrCleanPhone(value){
+  let s=ocrNormalizeDigits(value)
+    .replace(/[^\d]/g,"");
+
+  if(s.length < 7) return "";
+  return s;
+}
+
+function ocrCleanName(value){
+  return String(value || "")
+    .replace(/\s+/g," ")
+    .replace(/[|]/g,"")
+    .trim();
+}
+
+function ocrCreateStatus(){
+  let box=document.getElementById("ocrStatusBox");
+
+  if(!box){
+    box=document.createElement("div");
+    box.id="ocrStatusBox";
+
+    box.style.position="fixed";
+    box.style.left="12px";
+    box.style.right="12px";
+    box.style.bottom="18px";
+    box.style.zIndex="999999";
+    box.style.background="#0f172a";
+    box.style.color="#fff";
+    box.style.padding="14px";
+    box.style.borderRadius="12px";
+    box.style.fontSize="14px";
+    box.style.textAlign="center";
+    box.style.boxShadow="0 5px 25px rgba(0,0,0,.35)";
+
+    document.body.appendChild(box);
+  }
+
+  return box;
+}
+
+function ocrStatus(text){
+  const box=ocrCreateStatus();
+  box.innerHTML=text;
+}
+
+function ocrHideStatus(){
+  const box=document.getElementById("ocrStatusBox");
+  if(box) box.remove();
+}
+
+/* تحويل TSV إلى كلمات مع إحداثيات */
+function ocrWordsFromTSV(tsv){
+  const words=[];
+
+  String(tsv || "")
+    .split(/\r?\n/)
+    .slice(1)
+    .forEach(line=>{
+
+      const p=line.split("\t");
+      if(p.length < 12) return;
+
+      const level=Number(p[0]);
+      if(level !== 5) return;
+
+      const text=(p.slice(11).join("\t") || "").trim();
+      if(!text) return;
+
+      const left=Number(p[6]) || 0;
+      const top=Number(p[7]) || 0;
+      const width=Number(p[8]) || 0;
+      const height=Number(p[9]) || 0;
+      const conf=Number(p[10]) || 0;
+
+      if(conf < 15) return;
+
+      words.push({
+        text,
+        left,
+        top,
+        width,
+        height,
+        cx:left+(width/2),
+        cy:top+(height/2)
+      });
+    });
+
+  return words;
+}
+
+/* تجميع الكلمات حسب صفوف الجدول */
+function ocrGroupRows(words,canvasHeight){
+
+  const sorted=[...words].sort((a,b)=>a.cy-b.cy);
+
+  const rows=[];
+  const tolerance=Math.max(10,canvasHeight*0.007);
+
+  sorted.forEach(w=>{
+
+    let row=null;
+    let best=Infinity;
+
+    for(const r of rows){
+      const d=Math.abs(r.cy-w.cy);
+
+      if(d<tolerance && d<best){
+        best=d;
+        row=r;
+      }
+    }
+
+    if(!row){
+      row={
+        cy:w.cy,
+        words:[]
+      };
+
+      rows.push(row);
+    }
+
+    row.words.push(w);
+
+    row.cy=
+      row.words.reduce((s,x)=>s+x.cy,0) /
+      row.words.length;
+  });
+
+  return rows.sort((a,b)=>a.cy-b.cy);
+}
+
+/* قراءة صف واحد من جدول الصيدليات */
+function ocrParseTableRow(row,canvasWidth){
+
+  const nameWords=[];
+  const phoneWords=[];
+  const balanceWords=[];
+
+  row.words.forEach(w=>{
+
+    const x=w.cx/canvasWidth;
+
+    /*
+      توزيع الأعمدة حسب ملف كشف الصيدليات:
+      اليمين = الصيدلية
+      الوسط = الهاتف
+      اليسار = الرصيد
+    */
+
+    if(x >= 0.43){
+      nameWords.push(w);
+    }
+    else if(x >= 0.27){
+      phoneWords.push(w);
+    }
+    else if(x >= 0.03){
+      balanceWords.push(w);
+    }
+
+  });
+
+  /* الاسم عربي لذلك نرتب من اليمين لليسار */
+  nameWords.sort((a,b)=>b.left-a.left);
+
+  phoneWords.sort((a,b)=>a.left-b.left);
+  balanceWords.sort((a,b)=>a.left-b.left);
+
+  let name=ocrCleanName(
+    nameWords.map(x=>x.text).join(" ")
+  );
+
+  let phone=ocrCleanPhone(
+    phoneWords.map(x=>x.text).join("")
+  );
+
+  let balanceText=ocrNormalizeDigits(
+    balanceWords.map(x=>x.text).join("")
+  );
+
+  let balance=ocrCleanBalance(balanceText);
+
+  /* استبعاد رؤوس الجدول والإجمالي */
+  if(
+    !name ||
+    name.includes("الصيدلية") ||
+    name.includes("كشف أرصدة") ||
+    name.includes("الإجمالي") ||
+    name.includes("المستحق")
+  ){
+    return null;
+  }
+
+  /* يجب أن يوجد رقم رصيد */
+  if(!/\d/.test(ocrNormalizeDigits(balanceText))){
+    return null;
+  }
+
+  return {
+    name,
+    phone,
+    balance
+  };
+}
+
+
+/* =========================================================
+   دالة الاستيراد الجديدة
+   ========================================================= */
+
+window.importCustomersPDF_OCR = async function(event){
+
+  const file=event.target.files?.[0];
+  if(!file) return;
+
+  let worker=null;
+
+  try{
+
+    ocrStatus(
+      "جاري تجهيز قراءة PDF...<br>"+
+      "<small>يرجى عدم إغلاق الصفحة</small>"
+    );
+
+    /* pdf.js موجود مسبقًا، وإذا لم يكن موجودًا يتم تحميله */
+    if(typeof loadPdfLibrary==="function"){
+      await loadPdfLibrary();
+    }
+
+    if(!window.pdfjsLib){
+      throw new Error("مكتبة PDF غير متوفرة");
+    }
+
+    await loadTesseractOCR();
+
+    ocrStatus(
+      "جاري تشغيل OCR العربي...<br>"+
+      "<small>أول تشغيل قد يحتاج بعض الوقت</small>"
+    );
+
+    worker=await Tesseract.createWorker(
+      ["ara","eng"],
+      1,
+      {
+        logger:m=>{
+
+          if(m.status==="recognizing text"){
+
+            const percent=
+              Math.round((m.progress || 0)*100);
+
+            const box=
+              document.getElementById("ocrStatusBox");
+
+            if(box){
+              const page=
+                box.getAttribute("data-page") || "";
+
+              box.innerHTML=
+                "🔎 قراءة الصفحة "+page+
+                "<br>تقدم القراءة: "+percent+"%";
+            }
+          }
+        }
+      }
+    );
+
+    const bytes=
+      new Uint8Array(
+        await file.arrayBuffer()
+      );
+
+    const pdf=
+      await pdfjsLib
+        .getDocument({data:bytes})
+        .promise;
+
+    let imported=0;
+    let updated=0;
+    let ignored=0;
+
+    for(
+      let pageNumber=1;
+      pageNumber<=pdf.numPages;
+      pageNumber++
+    ){
+
+      const status=
+        ocrCreateStatus();
+
+      status.setAttribute(
+        "data-page",
+        pageNumber+" من "+pdf.numPages
+      );
+
+      ocrStatus(
+        "📄 تجهيز الصفحة "+
+        pageNumber+
+        " من "+
+        pdf.numPages+
+        "..."
+      );
+
+      status.setAttribute(
+        "data-page",
+        pageNumber+" من "+pdf.numPages
+      );
+
+      const page=
+        await pdf.getPage(pageNumber);
+
+      /*
+        دقة 2 مناسبة لزيادة دقة OCR
+      */
+      const viewport=
+        page.getViewport({scale:2});
+
+      const canvas=
+        document.createElement("canvas");
+
+      canvas.width=
+        Math.floor(viewport.width);
+
+      canvas.height=
+        Math.floor(viewport.height);
+
+      const ctx=
+        canvas.getContext(
+          "2d",
+          {
+            willReadFrequently:true
+          }
+        );
+
+      await page.render({
+        canvasContext:ctx,
+        viewport
+      }).promise;
+
+      ocrStatus(
+        "🔎 قراءة الصفحة "+
+        pageNumber+
+        " من "+
+        pdf.numPages+
+        " بواسطة OCR..."
+      );
+
+      const box=
+        document.getElementById("ocrStatusBox");
+
+      if(box){
+        box.setAttribute(
+          "data-page",
+          pageNumber+" من "+pdf.numPages
+        );
+      }
+
+      /*
+        نطلب TSV لأنه يحتوي مواقع الكلمات
+        حتى نعرف عمود الصيدلية والهاتف والرصيد
+      */
+      const result=
+        await worker.recognize(
+          canvas,
+          {},
+          {
+            text:true,
+            tsv:true
+          }
+        );
+
+      const words=
+        ocrWordsFromTSV(
+          result.data.tsv
+        );
+
+      const rows=
+        ocrGroupRows(
+          words,
+          canvas.height
+        );
+
+      rows.forEach(row=>{
+
+        const data=
+          ocrParseTableRow(
+            row,
+            canvas.width
+          );
+
+        if(!data){
+          ignored++;
+          return;
+        }
+
+        try{
+
+          /*
+            نستخدم دالة البرنامج الموجودة مسبقًا
+            لإضافة أو تحديث الصيدلية
+          */
+          if(
+            typeof saveImportedCustomer
+            ==="function"
+          ){
+
+            const isNew=
+              saveImportedCustomer({
+                name:data.name,
+                phone:data.phone,
+                openingBalance:data.balance
+              });
+
+            if(isNew){
+              imported++;
+            }else{
+              updated++;
+            }
+
+          }else{
+
+            throw new Error(
+              "دالة حفظ الصيدليات غير موجودة"
+            );
+
+          }
+
+        }catch(e){
+
+          console.warn(
+            "تعذر حفظ صف:",
+            data,
+            e
+          );
+
+        }
+
+      });
+
+      /*
+        تحرير الذاكرة بعد كل صفحة
+      */
+      canvas.width=1;
+      canvas.height=1;
+
+      await new Promise(
+        r=>setTimeout(r,100)
+      );
+    }
+
+    if(worker){
+      await worker.terminate();
+      worker=null;
+    }
+
+    saveDB();
+    renderAll();
+
+    ocrHideStatus();
+
+    alert(
+      "✅ تم الانتهاء من قراءة PDF بواسطة OCR\n\n"+
+      "صيدليات جديدة: "+imported+"\n"+
+      "تم تحديثها: "+updated+"\n\n"+
+      "يرجى مراجعة الأسماء والأرصدة بعد الاستيراد."
+    );
+
+  }catch(error){
+
+    console.error(
+      "PDF OCR ERROR:",
+      error
+    );
+
+    if(worker){
+      try{
+        await worker.terminate();
+      }catch(e){}
+    }
+
+    ocrHideStatus();
+
+    alert(
+      "❌ حدث خطأ أثناء قراءة PDF بواسطة OCR.\n\n"+
+      (error.message || error)
+    );
+
+  }
+
+  event.target.value="";
+};
+
+
+/* =========================================================
+   ربط زر PDF الموجود سابقًا بالدالة الجديدة
+   بدون حذف الكود القديم
+   ========================================================= */
+
+function activateNewPdfOCR(){
+
+  const input=
+    document.getElementById(
+      "customersPdfFile"
+    );
+
+  if(input){
+
+    input.onchange=
+      window.importCustomersPDF_OCR;
+
+    console.log(
+      "PDF OCR جاهز للعمل"
+    );
+
+    return true;
+  }
+
+  return false;
+}
+
+if(!activateNewPdfOCR()){
+
+  setTimeout(
+    activateNewPdfOCR,
+    1000
+  );
+
+  setTimeout(
+    activateNewPdfOCR,
+    2500
+  );
+}
+
+  </script>
 </body>
 </html>
