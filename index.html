@@ -1968,12 +1968,16 @@ function renderSale(){
       </td>
 
       <td>
-        <input type="number" min="1"
-        value="${Number(r.qty||1)}"
-        oninput="
-          sale[${i}].qty=Number(this.value||0);
-          calculateSale();
-        ">
+  <input type="number" min="1"
+  value="${Number(r.qty||1)}"
+  oninput="
+    sale[${i}].qty=Number(this.value||0);
+    if(sale[${i}].itemId){
+      selectSaleItem(${i},sale[${i}].itemId);
+    }else{
+      calculateSale();
+    }
+  ">
       </td>
 
       <td>
