@@ -4306,6 +4306,414 @@ async function importCustomersExcel(event) {
 
     event.target.value = "";
 } </script>
+<style>
+/* تثبيت فاتورة البيع داخل شاشة الهاتف */
+@media(max-width:768px){
+  #sale .table-wrap{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:hidden!important;
+  }
 
+  #sale table{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    table-layout:fixed!important;
+  }
+
+  #sale th,
+  #sale td{
+    padding:4px 2px!important;
+    font-size:11px!important;
+  }
+
+  #sale input,
+  #sale select{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+}
+</style>
+
+<script>
+/* ===== استيراد الصيدليات Excel + PDF ===== */
+
+function normalizeImportedDigits(v=""){
+  return String(v)
+    .replace(/[٠-٩]/g,d=>"0123456789"["٠١٢٣٤٥٦٧٨٩".indexOf(d)])
+    .replace(/[۰-۹]/g,d=>"0123456789"["۰۱۲۳۴۵۶۷۸۹".indexOf(d)]);
+}
+
+function importedNumber(v){
+  const n = Number(
+    normalizeImportedDigits(v)
+      .replace(/,/g,"")
+      .replace(/[^\d.-]/g,"")
+  );
+  return isNaN(n) ? 0 : n;
+}
+
+function importedCustomerByName(name){
+  const n=String(name||"").trim().toLowerCase();
+  return db.customers.find(x=>
+    String(x.name||"").trim().toLowerCase()===n
+  );
+}
+
+function saveImportedCustomer(data){
+  if(!data.name)return false;
+
+  let c=importedCustomerByName(data.name);
+
+  if(c){
+    c.phone=data.phone || c.phone || "";
+    c.license=data.license || c.license || "";
+    c.address=data.address || c.address || "";
+    c.discount=Number(data.discount||c.discount||0);
+    c.creditLimit=Number(data.creditLimit||c.creditLimit||0);
+
+    if(data.openingBalance!==undefined)
+      c.openingBalance=Number(data.openingBalance||0);
+
+    return false;
+  }
+
+  db.customers.push({
+    id:uid(),
+    name:String(data.name).trim(),
+    phone:String(data.phone||"").trim(),
+    license:String(data.license||"").trim(),
+    address:String(data.address||"").trim(),
+    discount:Number(data.discount||0),
+    creditLimit:Number(data.creditLimit||0),
+    openingBalance:Number(data.openingBalance||0),
+    active:true
+  });
+
+  return true;
+}
+
+
+/* تصحيح حساب رصيد الصيدلية */
+customerBalance=function(id){
+
+  const customer=db.customers.find(x=>x.id===id);
+
+  const openingBalance=
+    Number(customer?.openingBalance||0);
+
+  const sales=db.invoices
+    .filter(x=>x.customerId===id)
+    .reduce((s,x)=>s+Number(x.total||0),0);
+
+  const returns=db.returns
+    .filter(x=>x.customerId===id)
+    .reduce((s,x)=>s+Number(x.total||0),0);
+
+  const receipts=db.receipts
+    .filter(x=>x.customerId===id)
+    .reduce((s,x)=>s+Number(x.amount||0),0);
+
+  return openingBalance+sales-returns-receipts;
+};
+
+
+/* تصحيح استيراد Excel */
+importCustomersExcel=async function(event){
+
+  const file=event.target.files[0];
+  if(!file)return;
+
+  try{
+
+    const data=await file.arrayBuffer();
+    const workbook=XLSX.read(data);
+
+    const sheet=
+      workbook.Sheets[workbook.SheetNames[0]];
+
+    const rows=
+      XLSX.utils.sheet_to_json(sheet,{defval:""});
+
+    if(!rows.length){
+      alert("ملف Excel فارغ");
+      return;
+    }
+
+    let imported=0;
+    let updated=0;
+
+    rows.forEach(row=>{
+
+      const name=
+        row["الصيدلية"] ||
+        row["اسم الصيدلية"] ||
+        row["الاسم"] ||
+        row["name"] || "";
+
+      if(!String(name).trim())return;
+
+      const isNew=saveImportedCustomer({
+
+        name:name,
+
+        phone:
+          row["الهاتف"] ||
+          row["رقم الهاتف"] ||
+          row["phone"] || "",
+
+        license:
+          row["الترخيص"] ||
+          row["رقم الترخيص"] ||
+          row["license"] || "",
+
+        discount:importedNumber(
+          row["الخصم"] ||
+          row["نسبة الخصم"] ||
+          row["discount"] || 0
+        ),
+
+        creditLimit:importedNumber(
+          row["حد الدين"] ||
+          row["سقف الدين"] ||
+          row["creditLimit"] || 0
+        ),
+
+        address:
+          row["العنوان"] ||
+          row["address"] || "",
+
+        openingBalance:importedNumber(
+          row["الرصيد"] ||
+          row["الرصيد الافتتاحي"] ||
+          row["openingBalance"] || 0
+        )
+      });
+
+      if(isNew) imported++;
+      else updated++;
+    });
+
+    saveDB();
+    renderAll();
+
+    alert(
+      "تم الاستيراد بنجاح\n"+
+      "جديد: "+imported+
+      "\nتم تحديثه: "+updated
+    );
+
+  }catch(error){
+    console.error(error);
+    alert("حدث خطأ أثناء استيراد ملف Excel");
+  }
+
+  event.target.value="";
+};
+
+
+/* إضافة زر استيراد PDF */
+(function(){
+
+  const excelInput=
+    document.getElementById("customersExcelFile");
+
+  if(!excelInput)return;
+
+  const box=excelInput.parentElement;
+
+  if(document.getElementById("customersPdfFile"))
+    return;
+
+  const btn=document.createElement("button");
+  btn.className="btn btn-red";
+  btn.type="button";
+  btn.innerHTML="📄 استيراد من PDF";
+
+  const input=document.createElement("input");
+  input.type="file";
+  input.id="customersPdfFile";
+  input.accept="application/pdf,.pdf";
+  input.style.display="none";
+
+  btn.onclick=()=>input.click();
+  input.onchange=importCustomersPDF;
+
+  box.appendChild(btn);
+  box.appendChild(input);
+
+})();
+
+
+async function loadPdfLibrary(){
+
+  if(window.pdfjsLib)return;
+
+  await new Promise((resolve,reject)=>{
+
+    const s=document.createElement("script");
+
+    s.src=
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+
+    s.onload=resolve;
+    s.onerror=reject;
+
+    document.head.appendChild(s);
+  });
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc=
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
+
+
+async function importCustomersPDF(event){
+
+  const file=event.target.files[0];
+  if(!file)return;
+
+  try{
+
+    await loadPdfLibrary();
+
+    const bytes=
+      new Uint8Array(await file.arrayBuffer());
+
+    const pdf=
+      await pdfjsLib.getDocument({data:bytes}).promise;
+
+    let imported=0;
+    let updated=0;
+
+    for(let p=1;p<=pdf.numPages;p++){
+
+      const page=await pdf.getPage(p);
+      const content=await page.getTextContent();
+
+      const items=content.items
+        .filter(x=>String(x.str||"").trim())
+        .map(x=>({
+          text:String(x.str).trim(),
+          x:x.transform[4],
+          y:x.transform[5]
+        }));
+
+      const groups=[];
+
+      items.forEach(it=>{
+
+        let g=groups.find(r=>
+          Math.abs(r.y-it.y)<3
+        );
+
+        if(!g){
+          g={y:it.y,items:[]};
+          groups.push(g);
+        }
+
+        g.items.push(it);
+      });
+
+      groups.sort((a,b)=>b.y-a.y);
+
+      let header=null;
+
+      for(const g of groups){
+
+        const rowText=
+          g.items.map(x=>x.text).join(" ");
+
+        if(
+          rowText.includes("الصيدلية") &&
+          rowText.includes("الهاتف") &&
+          rowText.includes("الرصيد")
+        ){
+          header=g;
+          break;
+        }
+      }
+
+      if(!header)continue;
+
+      const hName=
+        header.items.find(x=>x.text.includes("الصيدلية"));
+
+      const hPhone=
+        header.items.find(x=>x.text.includes("الهاتف"));
+
+      const hBalance=
+        header.items.find(x=>x.text.includes("الرصيد"));
+
+      if(!hName || !hPhone || !hBalance)continue;
+
+      groups
+      .filter(g=>g.y<header.y-3)
+      .forEach(g=>{
+
+        let name="";
+        let phone="";
+        let balance="";
+
+        g.items.forEach(it=>{
+
+          const dName=Math.abs(it.x-hName.x);
+          const dPhone=Math.abs(it.x-hPhone.x);
+          const dBalance=Math.abs(it.x-hBalance.x);
+
+          if(dName<=dPhone && dName<=dBalance)
+            name+=(name?" ":"")+it.text;
+
+          else if(dPhone<=dBalance)
+            phone+=(phone?" ":"")+it.text;
+
+          else
+            balance+=(balance?" ":"")+it.text;
+        });
+
+        name=name.trim();
+
+        if(
+          !name ||
+          name.includes("الصيدلية") ||
+          name.includes("كشف أرصدة")
+        ) return;
+
+        const isNew=saveImportedCustomer({
+          name:name,
+          phone:phone.trim(),
+          openingBalance:importedNumber(balance)
+        });
+
+        if(isNew)imported++;
+        else updated++;
+      });
+    }
+
+    saveDB();
+    renderAll();
+
+    alert(
+      "تم استيراد PDF بنجاح\n"+
+      "جديد: "+imported+
+      "\nتم تحديثه: "+updated
+    );
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "تعذر قراءة ملف PDF.\n"+
+      "إذا كان PDF عبارة عن صورة ممسوحة ضوئياً فقد يحتاج OCR."
+    );
+  }
+
+  event.target.value="";
+}
+
+</script>
 </body>
 </html>
