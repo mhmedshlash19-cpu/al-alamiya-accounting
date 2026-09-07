@@ -1,4 +1,4 @@
-const CACHE_NAME = "alamiya-app-v1";
+const CACHE_NAME = "alamiya-app-v2";
 
 const APP_FILES = [
   "./",
