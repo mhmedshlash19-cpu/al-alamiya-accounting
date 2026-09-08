@@ -5618,6 +5618,300 @@ if(!activateNewPdfOCR()){
   );
 
 })();
+    /* ===== أدوات إدارة الأصناف - إضافة فقط بدون حذف الأكواد القديمة ===== */
+
+function findProductsArray(){
+    const names = [
+        "products",
+        "items",
+        "medicines",
+        "inventory",
+        "inventoryItems",
+        "productList"
+    ];
+
+    for(const name of names){
+        try{
+            if(Array.isArray(window[name])){
+                return {
+                    name: name,
+                    data: window[name]
+                };
+            }
+        }catch(e){}
+    }
+
+    return null;
+}
+
+
+function refreshProductsPage(){
+    try{
+        if(typeof renderProducts === "function"){
+            renderProducts();
+            return;
+        }
+
+        if(typeof renderItems === "function"){
+            renderItems();
+            return;
+        }
+
+        if(typeof renderInventory === "function"){
+            renderInventory();
+            return;
+        }
+
+        if(typeof renderMedicines === "function"){
+            renderMedicines();
+            return;
+        }
+    }catch(e){}
+
+    location.reload();
+}
+
+
+/* حذف كل الأصناف */
+function deleteAllProductsSafe(){
+
+    const ok = confirm(
+        "هل أنت متأكد من حذف جميع الأصناف؟\n\nلا يمكن التراجع عن هذه العملية."
+    );
+
+    if(!ok) return;
+
+    const found = findProductsArray();
+
+    if(found){
+        found.data.splice(0, found.data.length);
+    }
+
+    /* البحث عن بيانات الأصناف داخل localStorage */
+    for(let i = localStorage.length - 1; i >= 0; i--){
+
+        const key = localStorage.key(i);
+
+        try{
+            const value = JSON.parse(
+                localStorage.getItem(key)
+            );
+
+            if(
+                Array.isArray(value) &&
+                value.length > 0 &&
+                value.some(x =>
+                    x &&
+                    typeof x === "object" &&
+                    (
+                        "name" in x ||
+                        "اسم" in x ||
+                        "productName" in x ||
+                        "price" in x ||
+                        "السعر" in x
+                    )
+                )
+            ){
+                localStorage.setItem(
+                    key,
+                    JSON.stringify([])
+                );
+            }
+
+        }catch(e){}
+    }
+
+    alert("تم حذف جميع الأصناف بنجاح");
+
+    refreshProductsPage();
+}
+
+
+/* استبدال الأصناف:
+   يحذف الأصناف ثم يضغط زر استيراد Excel الموجود أصلاً
+*/
+function replaceProductsFromExcel(){
+
+    const ok = confirm(
+        "سيتم حذف جميع الأصناف الحالية ثم اختيار ملف Excel جديد.\n\nهل تريد المتابعة؟"
+    );
+
+    if(!ok) return;
+
+    const found = findProductsArray();
+
+    if(found){
+        found.data.splice(0, found.data.length);
+    }
+
+    for(let i = localStorage.length - 1; i >= 0; i--){
+
+        const key = localStorage.key(i);
+
+        try{
+            const value = JSON.parse(
+                localStorage.getItem(key)
+            );
+
+            if(
+                Array.isArray(value) &&
+                value.length > 0 &&
+                value.some(x =>
+                    x &&
+                    typeof x === "object" &&
+                    (
+                        "name" in x ||
+                        "اسم" in x ||
+                        "productName" in x ||
+                        "price" in x ||
+                        "السعر" in x
+                    )
+                )
+            ){
+                localStorage.setItem(
+                    key,
+                    JSON.stringify([])
+                );
+            }
+
+        }catch(e){}
+    }
+
+
+    /* البحث عن زر أو ملف استيراد Excel الحالي */
+    let fileInput = document.querySelector(
+        'input[type="file"][accept*="excel"],' +
+        'input[type="file"][accept*="spreadsheet"],' +
+        'input[type="file"][accept*=".xlsx"],' +
+        'input[type="file"][accept*=".xls"]'
+    );
+
+    if(fileInput){
+        fileInput.click();
+        return;
+    }
+
+
+    /* إذا لم نجد input نبحث عن زر استيراد Excel */
+    const buttons = [...document.querySelectorAll(
+        "button, a"
+    )];
+
+    const importButton = buttons.find(btn =>
+        (btn.textContent || "")
+        .includes("استيراد Excel")
+    );
+
+    if(importButton){
+        importButton.click();
+        return;
+    }
+
+    alert(
+        "تم حذف الأصناف، لكن لم أجد زر استيراد Excel تلقائياً. اضغط زر استيراد Excel الموجود في الصفحة."
+    );
+}
+
+
+/* إضافة الزرين تلقائياً بجانب أزرار الأصناف */
+function addProductManagementButtons(){
+
+    if(
+        document.getElementById(
+            "deleteAllProductsBtn"
+        )
+    ){
+        return;
+    }
+
+    const buttons = [...document.querySelectorAll(
+        "button, a"
+    )];
+
+    const excelBtn = buttons.find(btn =>
+        (btn.textContent || "")
+        .includes("استيراد Excel")
+    );
+
+    if(!excelBtn) return;
+
+
+    const container =
+        excelBtn.parentElement;
+
+
+    const deleteBtn =
+        document.createElement("button");
+
+    deleteBtn.id =
+        "deleteAllProductsBtn";
+
+    deleteBtn.type = "button";
+
+    deleteBtn.innerHTML =
+        "🗑 حذف كل الأصناف";
+
+    deleteBtn.style.cssText =
+        "background:#dc2626;" +
+        "color:white;" +
+        "border:0;" +
+        "border-radius:12px;" +
+        "padding:14px 18px;" +
+        "font-size:16px;" +
+        "font-weight:bold;" +
+        "margin:6px;" +
+        "cursor:pointer;";
+
+    deleteBtn.onclick =
+        deleteAllProductsSafe;
+
+
+    const replaceBtn =
+        document.createElement("button");
+
+    replaceBtn.id =
+        "replaceProductsBtn";
+
+    replaceBtn.type = "button";
+
+    replaceBtn.innerHTML =
+        "🔄 استبدال من Excel";
+
+    replaceBtn.style.cssText =
+        "background:#7c3aed;" +
+        "color:white;" +
+        "border:0;" +
+        "border-radius:12px;" +
+        "padding:14px 18px;" +
+        "font-size:16px;" +
+        "font-weight:bold;" +
+        "margin:6px;" +
+        "cursor:pointer;";
+
+    replaceBtn.onclick =
+        replaceProductsFromExcel;
+
+
+    container.appendChild(deleteBtn);
+    container.appendChild(replaceBtn);
+}
+
+
+/* تشغيل الإضافة */
+setTimeout(
+    addProductManagementButtons,
+    500
+);
+
+setTimeout(
+    addProductManagementButtons,
+    1500
+);
+
+setTimeout(
+    addProductManagementButtons,
+    3000
+);
 </script>
 </body>
 </html>
