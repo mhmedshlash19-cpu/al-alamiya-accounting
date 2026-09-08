@@ -5282,5 +5282,342 @@ if(!activateNewPdfOCR()){
 }
 
   </script>
+  <script>
+/* ==========================================
+   بحث الصيدليات مثل Google
+   إضافة فقط - بدون حذف أي كود
+========================================== */
+
+(function(){
+
+  /* تنظيف النص لتحسين البحث العربي */
+  function customerSearchNormalize(text){
+    return String(text || "")
+      .toLowerCase()
+      .replace(/[أإآ]/g,"ا")
+      .replace(/ى/g,"ي")
+      .replace(/ؤ/g,"و")
+      .replace(/ئ/g,"ي")
+      .replace(/[ًٌٍَُِّْـ]/g,"")
+      .replace(/\s+/g," ")
+      .trim();
+  }
+
+  /* إضافة مربع البحث مرة واحدة */
+  function addCustomerSearchBox(){
+
+    if(document.getElementById("customerGoogleSearch")){
+      return;
+    }
+
+    const page = document.getElementById("customers");
+    if(!page) return;
+
+    const actions = page.querySelector(".actions");
+    if(!actions) return;
+
+    const searchCard = document.createElement("div");
+
+    searchCard.id = "customerSearchCard";
+
+    searchCard.innerHTML = `
+      <div style="
+        background:#fff;
+        border-radius:18px;
+        padding:14px;
+        margin:15px 0;
+        box-shadow:0 2px 12px rgba(0,0,0,.06);
+      ">
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:10px;
+          border:2px solid #d7dce3;
+          border-radius:15px;
+          padding:4px 12px;
+          background:#fff;
+        ">
+
+          <span style="
+            font-size:25px;
+            flex:0 0 auto;
+          ">🔍</span>
+
+          <input
+            id="customerGoogleSearch"
+            type="search"
+            autocomplete="off"
+            placeholder="ابحث عن الصيدلية بالاسم أو الهاتف..."
+            style="
+              width:100%;
+              border:none;
+              outline:none;
+              padding:14px 4px;
+              font-size:16px;
+              background:transparent;
+              min-width:0;
+            "
+          >
+
+        </div>
+
+        <div
+          id="customerSearchInfo"
+          style="
+            text-align:center;
+            color:#64748b;
+            font-size:13px;
+            margin-top:8px;
+          "
+        >
+          اكتب اسم الصيدلية أو رقم الهاتف
+        </div>
+
+      </div>
+    `;
+
+    actions.insertAdjacentElement("afterend",searchCard);
+
+    const input =
+      document.getElementById("customerGoogleSearch");
+
+    input.addEventListener("input",function(){
+      renderCustomers();
+    });
+
+    /* منع Enter من عمل أي شيء غير البحث */
+    input.addEventListener("keydown",function(e){
+      if(e.key === "Enter"){
+        e.preventDefault();
+      }
+    });
+  }
+
+
+  /* ==========================================
+     استبدال عرض القائمة فقط
+     البيانات الأصلية تبقى كما هي
+  ========================================== */
+
+  renderCustomers = function(){
+
+    addCustomerSearchBox();
+
+    let debt = 0;
+    let over = 0;
+
+    /* حساب الإحصائيات لكل الصيدليات */
+    db.customers.forEach(x=>{
+
+      const b = customerBalance(x.id);
+
+      if(b > 0){
+        debt += b;
+      }
+
+      if(
+        Number(x.creditLimit) > 0 &&
+        b > Number(x.creditLimit)
+      ){
+        over++;
+      }
+
+    });
+
+
+    const input =
+      document.getElementById("customerGoogleSearch");
+
+    const info =
+      document.getElementById("customerSearchInfo");
+
+    const table =
+      document.getElementById("customersTable");
+
+
+    /* إذا مربع البحث لم يظهر بعد */
+    if(!input || !table){
+      return;
+    }
+
+
+    const query =
+      customerSearchNormalize(input.value);
+
+
+    /* الإحصائيات تبقى ظاهرة */
+    document.getElementById("customerCount").textContent =
+      db.customers.length;
+
+    document.getElementById("customerDebt").textContent =
+      money(debt);
+
+    document.getElementById("customerOverLimit").textContent =
+      over;
+
+
+    /* =====================================
+       لا تعرض أي صيدلية عند فتح الصفحة
+    ===================================== */
+
+    if(!query){
+
+      table.innerHTML = `
+        <tr>
+          <td colspan="6"
+              style="
+                text-align:center;
+                padding:35px 10px;
+                color:#64748b;
+                font-size:15px;
+              ">
+            🔍 ابحث عن صيدلية لعرض النتائج
+          </td>
+        </tr>
+      `;
+
+      if(info){
+        info.textContent =
+          "اكتب اسم الصيدلية أو رقم الهاتف";
+      }
+
+      return;
+    }
+
+
+    /* تقسيم كلمات البحث مثل Google */
+    const searchWords =
+      query.split(" ").filter(Boolean);
+
+
+    const results =
+      db.customers.filter(x=>{
+
+        const searchText =
+          customerSearchNormalize(
+            [
+              x.name,
+              x.phone,
+              x.license,
+              x.address
+            ].join(" ")
+          );
+
+        /*
+          إذا كتبت أكثر من كلمة،
+          يجب أن توجد جميع الكلمات في البيانات
+        */
+        return searchWords.every(word=>
+          searchText.includes(word)
+        );
+
+      });
+
+
+    /* لا توجد نتيجة */
+    if(!results.length){
+
+      table.innerHTML = `
+        <tr>
+          <td colspan="6"
+              style="
+                text-align:center;
+                padding:35px 10px;
+                color:#64748b;
+              ">
+            لا توجد صيدلية مطابقة لـ
+            <b>${esc(input.value)}</b>
+          </td>
+        </tr>
+      `;
+
+      if(info){
+        info.textContent =
+          "لم يتم العثور على نتائج";
+      }
+
+      return;
+    }
+
+
+    /* عرض النتائج فقط */
+    table.innerHTML =
+      results.map(x=>{
+
+        const b =
+          customerBalance(x.id);
+
+        return `
+          <tr>
+
+            <td>
+              <b>${esc(x.name || "")}</b>
+            </td>
+
+            <td>
+              ${esc(x.phone || "")}
+            </td>
+
+            <td>
+              ${esc(x.license || "")}
+            </td>
+
+            <td>
+              ${Number(x.discount || 0)}%
+            </td>
+
+            <td>
+              ${money(x.creditLimit)}
+            </td>
+
+            <td>
+              <b>${money(b)}</b>
+            </td>
+
+          </tr>
+        `;
+
+      }).join("");
+
+
+    if(info){
+
+      info.textContent =
+        "تم العثور على " +
+        results.length +
+        " صيدلية";
+
+    }
+
+  };
+
+
+  /* تشغيل الإضافة */
+  function startCustomerGoogleSearch(){
+
+    addCustomerSearchBox();
+
+    if(
+      document.getElementById("customersTable")
+    ){
+      renderCustomers();
+    }
+
+  }
+
+
+  setTimeout(
+    startCustomerGoogleSearch,
+    300
+  );
+
+  setTimeout(
+    startCustomerGoogleSearch,
+    1200
+  );
+
+})();
+</script>
 </body>
 </html>
