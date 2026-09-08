@@ -5910,8 +5910,27 @@ setTimeout(
 
 setTimeout(
     addProductManagementButtons,
-    3000
-);
+    3000);
+/* إبقاء البحث عن صفحة الأصناف يعمل دائماً */
+setInterval(function () {
+    try {
+        addProductManagementButtons();
+    } catch(e) {}
+}, 1000);
+
+
+/* تشغيل الإضافة عند أي تغيير في الصفحة */
+const productsButtonsObserver = new MutationObserver(function () {
+    try {
+        addProductManagementButtons();
+    } catch(e) {}
+});
+
+productsButtonsObserver.observe(document.body, {
+    childList: true,
+    subtree: true
+});
+
 </script>
 </body>
 </html>
