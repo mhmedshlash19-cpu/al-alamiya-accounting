@@ -971,11 +971,11 @@ th{
 <button class="btn btn-red" onclick="exportItemsPDF()">
 📄 تصدير PDF
 </button>
-<button class="btn btn-red" type="button" onclick="deleteAllDbItems()">
-🗑 حذف كل الأصناف
+<button class="btn btn-red" type="button" onclick="deleteItemsReal()">
+🗑️ حذف كل الأصناف
 </button>
 
-<button class="btn btn-blue" type="button" onclick="replaceAllDbItems()">
+<button class="btn btn-blue" type="button" onclick="replaceItemsReal()">
 🔄 استبدال من Excel
 </button>
 </div>
@@ -5622,7 +5622,45 @@ if(!activateNewPdfOCR()){
     startCustomerGoogleSearch,
     1200
   );
+window.deleteItemsReal = function () {
 
+    if (!confirm("هل تريد حذف جميع الأصناف؟")) return;
+
+    db.items.length = 0;
+
+    saveDB();
+
+    if (typeof renderItems === "function") {
+        renderItems();
+    }
+
+    if (typeof renderAll === "function") {
+        renderAll();
+    }
+
+    alert("تم حذف جميع الأصناف بنجاح");
+};
+
+
+window.replaceItemsReal = function () {
+
+    if (!confirm("سيتم حذف جميع الأصناف الحالية ثم اختيار ملف Excel جديد. هل تريد المتابعة؟")) {
+        return;
+    }
+
+    db.items.length = 0;
+
+    saveDB();
+
+    const input = document.getElementById("itemsExcelFile");
+
+    if (input) {
+        input.value = "";
+        input.click();
+    } else {
+        alert("لم يتم العثور على ملف Excel");
+    }
+};
 })();
     /* ===== أدوات إدارة الأصناف - إضافة فقط بدون حذف الأكواد القديمة ===== */
 
