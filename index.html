@@ -693,10 +693,58 @@ th{
 <div class="invoice-head">
 
 <div>
-<label>الصيدلية</label>
-<select id="saleCustomer">
-<option value="">اختر الصيدلية</option>
-</select>
+  <label>الصيدلية</label>
+
+  <input
+    id="saleCustomerSearch"
+    type="search"
+    placeholder="🔍 اكتب اسم الصيدلية..."
+    autocomplete="off"
+    style="width:100%;margin-bottom:8px;"
+  >
+
+  <select id="saleCustomer">
+    <option value="">اختر الصيدلية</option>
+  </select>
+
+  <script>
+    (function () {
+      const search = document.getElementById("saleCustomerSearch");
+      const select = document.getElementById("saleCustomer");
+
+      if (!search || !select) return;
+
+      search.addEventListener("input", function () {
+        const text = this.value.trim().toLowerCase();
+
+        Array.from(select.options).forEach(function (option, index) {
+          if (index === 0) {
+            option.hidden = false;
+            return;
+          }
+
+          option.hidden =
+            text !== "" &&
+            !option.text.toLowerCase().includes(text);
+        });
+
+        const results = Array.from(select.options).filter(function (option, index) {
+          return index > 0 && !option.hidden;
+        });
+
+        if (text && results.length === 1) {
+          select.value = results[0].value;
+          select.dispatchEvent(new Event("change"));
+        }
+      });
+
+      select.addEventListener("change", function () {
+        if (this.selectedIndex > 0) {
+          search.value = this.options[this.selectedIndex].text;
+        }
+      });
+    })();
+  </script>
 </div>
 
 <div>
