@@ -5930,7 +5930,84 @@ productsButtonsObserver.observe(document.body, {
     childList: true,
     subtree: true
 });
+/* حل إضافي لإظهار أزرار إدارة الأصناف */
+function forceAddProductManagementButtons(){
 
+    if(document.getElementById("deleteAllProductsBtn")){
+        return;
+    }
+
+    const allElements = [
+        ...document.querySelectorAll(
+            "button, a, label, div, span"
+        )
+    ];
+
+    const excelBtn = allElements.find(el => {
+        const text = (el.textContent || "")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        return text === "استيراد Excel" ||
+               text.includes("استيراد Excel");
+    });
+
+    if(!excelBtn) return;
+
+    let container = excelBtn.parentElement;
+
+    if(!container) return;
+
+
+    const deleteBtn = document.createElement("button");
+
+    deleteBtn.id = "deleteAllProductsBtn";
+    deleteBtn.type = "button";
+    deleteBtn.innerHTML = "🗑 حذف كل الأصناف";
+
+    deleteBtn.style.cssText =
+        "background:#dc2626;" +
+        "color:white;" +
+        "border:0;" +
+        "border-radius:12px;" +
+        "padding:14px 18px;" +
+        "font-size:16px;" +
+        "font-weight:bold;" +
+        "margin:6px;";
+
+    deleteBtn.onclick = deleteAllProductsSafe;
+
+
+    const replaceBtn = document.createElement("button");
+
+    replaceBtn.id = "replaceProductsBtn";
+    replaceBtn.type = "button";
+    replaceBtn.innerHTML = "🔄 استبدال من Excel";
+
+    replaceBtn.style.cssText =
+        "background:#7c3aed;" +
+        "color:white;" +
+        "border:0;" +
+        "border-radius:12px;" +
+        "padding:14px 18px;" +
+        "font-size:16px;" +
+        "font-weight:bold;" +
+        "margin:6px;";
+
+    replaceBtn.onclick = replaceProductsFromExcel;
+
+
+    container.appendChild(deleteBtn);
+    container.appendChild(replaceBtn);
+}
+
+
+/* تشغيل مستمر عند فتح صفحة الأصناف */
+setInterval(function(){
+    try{
+        forceAddProductManagementButtons();
+    }catch(e){}
+},1000);
 </script>
 </body>
 </html>
