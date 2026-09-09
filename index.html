@@ -971,11 +971,11 @@ th{
 <button class="btn btn-red" onclick="exportItemsPDF()">
 📄 تصدير PDF
 </button>
-<button class="btn btn-red" type="button" onclick="deleteAllProductsSafe()">
+<button class="btn btn-red" type="button" onclick="deleteAllDbItems()">
 🗑 حذف كل الأصناف
 </button>
 
-<button class="btn btn-blue" type="button" onclick="replaceProductsFromExcel()">
+<button class="btn btn-blue" type="button" onclick="replaceAllDbItems()">
 🔄 استبدال من Excel
 </button>
 </div>
@@ -6014,6 +6014,80 @@ setInterval(function(){
         forceAddProductManagementButtons();
     }catch(e){}
 },1000);
-</script>
+ /* إصلاح مباشر لحذف الأصناف واستبدالها */
+
+
+/* إصلاح حذف جميع الأصناف */
+function deleteAllDbItems() {
+    if (!confirm("هل تريد حذف جميع الأصناف؟")) return;
+
+    if (typeof db !== "undefined" && Array.isArray(db.items)) {
+        db.items.length = 0;
+    }
+
+    if (typeof items !== "undefined" && Array.isArray(items)) {
+        items.length = 0;
+    }
+
+    if (typeof products !== "undefined" && Array.isArray(products)) {
+        products.length = 0;
+    }
+
+    if (typeof saveDB === "function") {
+        try { saveDB(); } catch(e) {}
+    }
+
+    if (typeof saveItems === "function") {
+        try { saveItems(); } catch(e) {}
+    }
+
+    if (typeof renderItems === "function") {
+        try { renderItems(); } catch(e) {}
+    }
+
+    if (typeof renderAll === "function") {
+        try { renderAll(); } catch(e) {}
+    }
+
+    alert("تم حذف جميع الأصناف");
+}
+
+
+/* إصلاح استبدال جميع الأصناف من Excel */
+function replaceAllDbItems() {
+    if (!confirm("سيتم حذف الأصناف الحالية ثم اختيار ملف Excel جديد. هل تريد المتابعة؟")) {
+        return;
+    }
+
+    if (typeof db !== "undefined" && Array.isArray(db.items)) {
+        db.items.length = 0;
+    }
+
+    if (typeof items !== "undefined" && Array.isArray(items)) {
+        items.length = 0;
+    }
+
+    if (typeof products !== "undefined" && Array.isArray(products)) {
+        products.length = 0;
+    }
+
+    if (typeof saveDB === "function") {
+        try { saveDB(); } catch(e) {}
+    }
+
+    if (typeof saveItems === "function") {
+        try { saveItems(); } catch(e) {}
+    }
+
+    const input = document.getElementById("itemsExcelFile");
+
+    if (input) {
+        input.value = "";
+        input.click();
+    } else {
+        alert("لم يتم العثور على زر استيراد Excel");
+    }
+}
+  </script>
 </body>
 </html>
