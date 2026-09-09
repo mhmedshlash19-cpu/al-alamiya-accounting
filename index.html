@@ -3971,65 +3971,328 @@ const offerFree=offerMatch ? Number(offerMatch[2]) : 0;
           ),
 
           cost:Number(
-            row["سعر الشراء"] ||
-            row["cost"] ||
-            0
-          ),
+function importItemsExcel(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
 
-          minQty:Number(
-            row["حد النقص"] ||
-            row["minQty"] ||
-            db.settings.lowStock ||
-            0
-          ),
+  const reader = new FileReader();
+
+  reader.onload = function (e) {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: "array" });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+
+      // قراءة الملف كمصفوفة حتى لا نعتمد على اسم ثابت للأعمدة
+      const table = XLSX.utils.sheet_to_json(sheet, {
+        header: 1,
+        defval: "",
+        raw: false
+      });
+
+      if (!table || table.length < 2) {
+        alert("ملف Excel فارغ أو لا يحتوي أصناف");
+        input.value = "";
+        return;
+      }
+
+      // تنظيف أسماء الأعمدة
+      function clean(v) {
+        return String(v == null ? "" : v)
+          .trim()
+          .replace(/\s+/g, " ")
+          .replace(/[ـ]/g, "")
+          .toLowerCase();
+      }
+
+      function number(v) {
+        if (v === null || v === undefined || v === "") return 0;
+
+        let x = String(v)
+          .replace(/,/g, "")
+          .replace(/[^\d.\-]/g, "");
+
+        const n = parseFloat(x);
+        return isNaN(n) ? 0 : n;
+      }
+
+      // البحث عن صف العناوين
+      let headerRow = -1;
+
+      for (let r = 0; r < Math.min(table.length, 20); r++) {
+        const row = table[r].map(clean);
+
+        const found = row.some(h =>
+          h.includes("الصنف") ||
+          h.includes("اسم الدواء") ||
+          h.includes("اسم المنتج") ||
+          h === "name"
+        );
+
+        if (found) {
+          headerRow = r;
+          break;
+        }
+      }
+
+      if (headerRow === -1) {
+        // إذا لم نجد عنواناً واضحاً نعتبر أول صف هو العناوين
+        headerRow = 0;
+      }
+
+      const headers = table[headerRow].map(clean);
+
+      function column(names) {
+        for (const name of names) {
+          const n = clean(name);
+
+          let i = headers.findIndex(h => h === n);
+          if (i !== -1) return i;
+
+          i = headers.findIndex(h => h.includes(n));
+          if (i !== -1) return i;
+        }
+
+        return -1;
+      }
+
+      const cName = column([
+        "اسم الصنف",
+        "الصنف",
+        "اسم الدواء",
+        "اسم المنتج",
+        "المنتج",
+        "المادة",
+        "name"
+      ]);
+
+      const cScientific = column([
+        "الاسم العلمي",
+        "المادة العلمية",
+        "scientific"
+      ]);
+
+      const cBarcode = column([
+        "الباركود",
+        "باركود",
+        "barcode"
+      ]);
+
+      const cCompany = column([
+        "الشركة",
+        "اسم الشركة",
+        "المعمل",
+        "company"
+      ]);
+
+      const cCategory = column([
+        "التصنيف",
+        "الفئة",
+        "category"
+      ]);
+
+      const cQty = column([
+        "الكمية",
+        "المخزون",
+        "الرصيد",
+        "qty"
+      ]);
+
+      const cPrice = column([
+        "سعر البيع",
+        "السعر",
+        "سعر",
+        "price"
+      ]);
+
+      const cCost = column([
+        "سعر الشراء",
+        "سعر التكلفة",
+        "التكلفة",
+        "cost"
+      ]);
+
+      const cMin = column([
+        "حد النقص",
+        "الحد الأدنى",
+        "minqty"
+      ]);
+
+      const cCommission = column([
+        "عمولة المندوب %",
+        "العمولة",
+        "commission"
+      ]);
+
+      const cOffer = column([
+        "العرض",
+        "بونص",
+        "offer"
+      ]);
+
+      const cBuy = column([
+        "شراء العرض",
+        "buyqty"
+      ]);
+
+      const cFree = column([
+        "بونص العرض",
+        "freeqty"
+      ]);
+
+      // إذا لم يتعرف على عمود الاسم
+      if (cName === -1) {
+        alert(
+          "لم أستطع تحديد عمود اسم الصنف.\n" +
+          "اجعل عنوان العمود: اسم الصنف"
+        );
+        input.value = "";
+        return;
+      }
+
+      let added = 0;
+      let skipped = 0;
+
+      for (let r = headerRow + 1; r < table.length; r++) {
+        const row = table[r];
+
+        if (!row || !row.length) continue;
+
+        const name = String(row[cName] || "").trim();
+
+        if (!name) {
+          skipped++;
+          continue;
+        }
+
+        // الشركة
+        const companyName =
+          cCompany >= 0
+            ? String(row[cCompany] || "").trim()
+            : "";
+
+        let companyId = "";
+
+        if (companyName) {
+          let company = db.companies.find(
+            c => clean(c.name) === clean(companyName)
+          );
+
+          if (!company) {
+            company = {
+              id: uid(),
+              name: companyName,
+              commission: 0,
+              buyQty: 0,
+              freeQty: 0,
+              note: "",
+              active: true
+            };
+
+            db.companies.push(company);
+          }
+
+          companyId = company.id;
+        }
+
+        // قراءة العرض مثل 10+3
+        const offerText =
+          cOffer >= 0
+            ? String(row[cOffer] || "").trim()
+            : "";
+
+        const offerMatch =
+          offerText.match(/(\d+)\s*\+\s*(\d+)/);
+
+        let buyQty =
+          cBuy >= 0 ? number(row[cBuy]) : 0;
+
+        let freeQty =
+          cFree >= 0 ? number(row[cFree]) : 0;
+
+        if (offerMatch) {
+          if (!buyQty) buyQty = Number(offerMatch[1]);
+          if (!freeQty) freeQty = Number(offerMatch[2]);
+        }
+
+        db.items.push({
+          id: uid(),
+
+          name: name,
+
+          scientific:
+            cScientific >= 0
+              ? String(row[cScientific] || "").trim()
+              : "",
+
+          barcode:
+            cBarcode >= 0
+              ? String(row[cBarcode] || "").trim()
+              : "",
+
+          companyId: companyId,
+
+          category:
+            cCategory >= 0
+              ? String(row[cCategory] || "").trim()
+              : "",
+
+          qty:
+            cQty >= 0
+              ? number(row[cQty])
+              : 0,
+
+          price:
+            cPrice >= 0
+              ? number(row[cPrice])
+              : 0,
+
+          cost:
+            cCost >= 0
+              ? number(row[cCost])
+              : 0,
+
+          minQty:
+            cMin >= 0
+              ? number(row[cMin])
+              : Number(db.settings.lowStock || 0),
 
           commissionOverride:
-          row["عمولة المندوب %"]!=="" &&
-          row["عمولة المندوب %"]!==undefined
-          ?Number(row["عمولة المندوب %"])
-          :null,
+            cCommission >= 0 &&
+            String(row[cCommission] || "").trim() !== ""
+              ? number(row[cCommission])
+              : null,
 
-          
-buyQty:Number(
-  row["شراء العرض"] ||
-  row["buyQty"] ||
-  offerBuy ||
-  0
-),
+          buyQty: buyQty,
+          freeQty: freeQty,
 
-          freeQty:Number(
-            row["بونص العرض"] ||
-            row["freeQty"] ||
-     offerFree ||  
-            0
-          ),
-
-          active:true
+          active: true
         });
 
         added++;
-      });
+      }
 
       saveDB();
       renderAll();
 
-      input.value="";
+      input.value = "";
 
       alert(
         "تم استيراد " +
         added +
-        " صنف بنجاح"
+        " صنف بنجاح" +
+        (skipped ? "\nتم تجاهل " + skipped + " صف فارغ" : "")
       );
 
-    }catch(err){
-
+    } catch (err) {
       console.error(err);
 
       alert(
-        "حدث خطأ أثناء قراءة ملف Excel"
+        "حدث خطأ أثناء قراءة ملف Excel:\n" +
+        (err.message || err)
       );
 
-      input.value="";
+      input.value = "";
     }
   };
 
