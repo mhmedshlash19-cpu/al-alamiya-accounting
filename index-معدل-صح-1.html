@@ -1,0 +1,5669 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>مستودع العالمية لتجارة الأدوية</title>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#087f5b">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<style>
+:root{
+  --green:#087f5b;
+  --green2:#0ca678;
+  --navy:#112c49;
+  --red:#d92d20;
+  --bg:#f4f6f8;
+  --line:#e4e7ec;
+  --white:#fff;
+  --text:#172b4d;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+body{
+  margin:0;
+  font-family:Tahoma,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+/* الشريط العلوي */
+header{
+  height:64px;
+  background:#fff;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:0 14px;
+  position:sticky;
+  top:0;
+  z-index:100;
+}
+
+.menu-btn{
+  border:0;
+  background:#f2f4f7;
+  width:45px;
+  height:45px;
+  border-radius:10px;
+  font-size:25px;
+  cursor:pointer;
+}
+
+.brand{
+  flex:1;
+  text-align:center;
+  font-size:20px;
+  font-weight:800;
+  color:var(--navy);
+}
+
+.notification-btn{
+  border:0;
+  background:#f2f4f7;
+  width:45px;
+  height:45px;
+  border-radius:10px;
+  font-size:21px;
+}
+
+.logout-btn{
+  border:0;
+  background:var(--red);
+  color:#fff;
+  padding:13px 18px;
+  border-radius:10px;
+  font-weight:bold;
+}
+
+/* التخطيط */
+.layout{
+  display:flex;
+  min-height:calc(100vh - 64px);
+}
+
+.sidebar{
+  width:260px;
+  background:#112c49;
+  padding:12px;
+}
+
+.sidebar button{
+  display:block;
+  width:100%;
+  border:0;
+  background:transparent;
+  color:white;
+  text-align:right;
+  padding:13px 12px;
+  margin-bottom:4px;
+  border-radius:9px;
+  font-size:15px;
+  cursor:pointer;
+}
+
+.sidebar button:hover,
+.sidebar button.active{
+  background:#1b416b;
+}
+
+main{
+  flex:1;
+  padding:18px;
+  min-width:0;
+}
+
+.page{
+  display:none;
+}
+
+.page.active{
+  display:block;
+}
+
+.page-title{
+  font-size:29px;
+  font-weight:800;
+  margin:8px 0 22px;
+  color:#102a43;
+}
+
+/* البطاقات */
+.card{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:15px;
+  box-shadow:0 2px 8px rgba(0,0,0,.03);
+}
+
+.cards{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  margin-bottom:15px;
+}
+
+.stat{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:16px;
+}
+
+.stat small{
+  color:#667085;
+}
+
+.stat strong{
+  display:block;
+  font-size:25px;
+  margin-top:8px;
+}
+
+/* النماذج */
+label{
+  display:block;
+  margin-bottom:6px;
+  font-weight:700;
+}
+
+input,
+select,
+textarea{
+  width:100%;
+  border:1px solid #d0d5dd;
+  border-radius:10px;
+  padding:12px;
+  font-family:inherit;
+  font-size:15px;
+  background:#fff;
+}
+
+textarea{
+  min-height:85px;
+}
+
+.form-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+
+.btn{
+  border:0;
+  border-radius:10px;
+  padding:12px 18px;
+  cursor:pointer;
+  font-family:inherit;
+  font-weight:700;
+}
+
+.btn-green{
+  background:linear-gradient(135deg,var(--green),var(--green2));
+  color:#fff;
+}
+
+.btn-blue{
+  background:#175cd3;
+  color:#fff;
+}
+
+.btn-red{
+  background:#d92d20;
+  color:#fff;
+}
+
+.btn-gray{
+  background:#e9ecef;
+  color:#344054;
+}
+
+.btn-orange{
+  background:#f79009;
+  color:#fff;
+}
+
+/* الجداول */
+.table-wrap{
+  overflow:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:720px;
+}
+
+th,
+td{
+  padding:12px 10px;
+  border-bottom:1px solid var(--line);
+  text-align:right;
+}
+
+th{
+  background:#f8fafc;
+  white-space:nowrap;
+}
+
+.actions{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+}
+
+/* فاتورة البيع */
+.invoice-head{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+}
+
+.invoice-total{
+  font-size:27px;
+  font-weight:800;
+  margin-top:18px;
+}
+
+.commission-total{
+  color:#667085;
+  margin-top:8px;
+}
+
+.sale-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:20px;
+}
+
+/* الشعار */
+.invoice-logo{
+  max-width:110px;
+  max-height:90px;
+  object-fit:contain;
+  display:none;
+}
+
+/* نافذة */
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.55);
+  z-index:500;
+  padding:20px;
+  overflow:auto;
+}
+
+.modal.show{
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+}
+
+.modal-box{
+  width:min(720px,100%);
+  background:white;
+  border-radius:17px;
+  padding:20px;
+  margin-top:30px;
+}
+
+.modal-title{
+  font-size:22px;
+  font-weight:800;
+  margin-bottom:18px;
+}
+
+/* إعدادات الفاتورة */
+.logo-preview{
+  width:130px;
+  height:100px;
+  border:1px dashed #98a2b3;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  background:#f8fafc;
+}
+
+.logo-preview img{
+  max-width:100%;
+  max-height:100%;
+}
+
+/* إشعار */
+.toast{
+  position:fixed;
+  bottom:20px;
+  left:20px;
+  background:#101828;
+  color:#fff;
+  padding:13px 18px;
+  border-radius:10px;
+  z-index:1000;
+  display:none;
+}
+
+/* فاتورة الطباعة */
+#printInvoice{
+  display:none;
+  background:#fff;
+  padding:25px;
+  direction:rtl;
+}
+
+.print-header{
+  text-align:center;
+  border-bottom:2px solid #111;
+  padding-bottom:14px;
+  margin-bottom:15px;
+}
+
+.print-header img{
+  max-width:120px;
+  max-height:90px;
+}
+
+.print-title{
+  font-size:25px;
+  font-weight:bold;
+}
+
+.print-info{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin:15px 0;
+}
+
+.print-total{
+  font-size:20px;
+  font-weight:bold;
+  margin-top:15px;
+}
+
+/* الهاتف */
+@media(max-width:850px){
+
+  .sidebar{
+    position:fixed;
+    top:64px;
+    right:-280px;
+    bottom:0;
+    z-index:200;
+    transition:.25s;
+    overflow:auto;
+  }
+
+  .sidebar.open{
+    right:0;
+  }
+
+  main{
+    padding:12px;
+  }
+
+  .cards{
+    grid-template-columns:repeat(2,1fr);
+  }
+
+  .form-grid,
+  .invoice-head{
+    grid-template-columns:1fr;
+  }
+
+  .brand{
+    font-size:17px;
+  }
+
+  .page-title{
+    font-size:25px;
+  }
+}
+
+@media print{
+
+  body *{
+    visibility:hidden;
+  }
+
+  #printInvoice,
+  #printInvoice *{
+    visibility:visible;
+  }
+
+  #printInvoice{
+    display:block !important;
+    position:absolute;
+    inset:0;
+    width:100%;
+  }
+}
+  /* تحسين فاتورة البيع للموبايل */
+@media (max-width: 768px){
+
+  #sale{
+    padding:8px !important;
+  }
+
+  #sale .card{
+    padding:10px !important;
+    margin-bottom:10px !important;
+  }
+
+  #sale .table-wrap{
+    width:100% !important;
+    overflow-x:hidden !important;
+  }
+
+  #sale table{
+    width:100% !important;
+    table-layout:fixed !important;
+    font-size:11px !important;
+  }
+
+  #sale th,
+  #sale td{
+    padding:4px 2px !important;
+    white-space:normal !important;
+  }
+
+  #sale th:nth-child(1),
+  #sale td:nth-child(1){
+    width:34% !important;
+  }
+
+  #sale th:nth-child(2),
+  #sale td:nth-child(2){
+    width:13% !important;
+  }
+
+  #sale th:nth-child(3),
+  #sale td:nth-child(3){
+    width:13% !important;
+  }
+
+  #sale th:nth-child(4),
+  #sale td:nth-child(4){
+    width:16% !important;
+  }
+
+  #sale th:nth-child(5),
+  #sale td:nth-child(5){
+    width:17% !important;
+  }
+
+  #sale th:nth-child(6),
+  #sale td:nth-child(6){
+    width:7% !important;
+  }
+
+  #sale input,
+  #sale select{
+    width:100% !important;
+    min-width:0 !important;
+    padding:6px 3px !important;
+    font-size:11px !important;
+  }
+
+  #sale .btn{
+    padding:7px 8px !important;
+    font-size:12px !important;
+  }
+}
+  /* ضبط جدول فاتورة البيع على شاشة الهاتف */
+#sale .table-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+}
+
+#sale table {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+}
+
+#sale th,
+#sale td {
+  padding: 4px 2px !important;
+  font-size: 11px !important;
+}
+
+#sale input,
+#sale select {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <button class="menu-btn" onclick="toggleMenu()">☰</button>
+
+  <div class="brand">
+    مستودع العالمية لتجارة الأدوية
+  </div>
+
+  <button class="notification-btn">🔔</button>
+
+  <button class="logout-btn">
+    خروج
+  </button>
+</header>
+
+<div class="layout">
+
+<aside class="sidebar" id="sidebar">
+
+<button onclick="showPage('dashboard')">
+📊 لوحة المعلومات
+</button>
+
+<button onclick="showPage('sale')">
+🧾 فاتورة بيع
+</button>
+
+<button onclick="showPage('invoices')">
+📑 الفواتير
+</button>
+
+<button onclick="showPage('approvals')">
+✅ طلبات الموافقة
+</button>
+
+<button onclick="showPage('purchases')">
+🛒 المشتريات
+</button>
+
+<button onclick="showPage('returns')">
+↩️ المرتجعات
+</button>
+
+<button onclick="showPage('items')">
+💊 الأصناف والتصنيفات
+</button>
+
+<button onclick="showPage('warehouses')">
+🏬 المخزون والمستودعات
+</button>
+
+<button onclick="showPage('customers')">
+🏥 الصيدليات
+</button>
+
+<button onclick="showPage('suppliers')">
+🚚 الموردون
+</button>
+
+<button onclick="showPage('reps')">
+👨‍💼 المندوبون والعمولات
+</button>
+
+<button onclick="showPage('companies')">
+🏭 الشركات الصانعة
+</button>
+
+<button onclick="showPage('receipts')">
+💵 سندات القبض
+</button>
+
+<button onclick="showPage('cash')">
+💰 الخزينة والمصاريف
+</button>
+
+<button onclick="showPage('reports')">
+📈 التقارير
+</button>
+
+<button onclick="showPage('settings')">
+⚙️ الإعدادات
+</button>
+
+</aside>
+
+<main>
+
+<section id="dashboard" class="page active">
+
+<div class="page-title">
+لوحة المعلومات
+</div>
+
+<div class="cards">
+
+<div class="stat">
+<small>إجمالي الأصناف</small>
+<strong id="dashItems">0</strong>
+</div>
+
+<div class="stat">
+<small>الصيدليات</small>
+<strong id="dashCustomers">0</strong>
+</div>
+
+<div class="stat">
+<small>الفواتير</small>
+<strong id="dashInvoices">0</strong>
+</div>
+
+<div class="stat">
+<small>إجمالي المبيعات</small>
+<strong id="dashSales">0.00</strong>
+</div>
+
+</div>
+
+<div class="card">
+<h3>مرحباً بك</h3>
+<p>
+نظام إدارة مستودع العالمية لتجارة الأدوية.
+</p>
+</div>
+
+</section>
+
+
+<section id="sale" class="page">
+
+<div class="page-title">
+فاتورة بيع
+</div>
+
+<div class="card">
+
+<div class="invoice-head">
+
+<div>
+<label>الصيدلية</label>
+<select id="saleCustomer">
+<option value="">اختر الصيدلية</option>
+</select>
+</div>
+
+<div>
+<label>المندوب</label>
+<select id="saleRep">
+<option value="">اختر المندوب</option>
+</select>
+</div>
+
+<div>
+<label>التاريخ</label>
+<input type="date" id="saleDate">
+</div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="table-wrap">
+
+<table>
+<thead>
+<tr>
+<th>الصنف</th>
+<th>الكمية</th>
+<th>البونص</th>
+<th>السعر</th>
+<th>الإجمالي</th>
+<th>حذف</th>
+</tr>
+</thead>
+
+<tbody id="saleLines"></tbody>
+
+</table>
+
+</div>
+
+<br>
+
+<button class="btn btn-blue" onclick="addSaleLine()">
++ إضافة صنف
+</button>
+
+<div class="invoice-total">
+الإجمالي:
+<span id="saleTotal">0.00</span>
+</div>
+
+<div class="commission-total">
+إجمالي عمولة المندوب:
+<span id="saleCommission">0.00</span>
+</div>
+
+<div class="sale-actions">
+
+<button class="btn btn-green" onclick="saveSale()">
+حفظ الفاتورة
+</button>
+
+<button class="btn btn-gray" onclick="clearSaleDraft()">
+فاتورة جديدة
+</button>
+
+</div>
+
+</div>
+
+</section>
+<section id="invoices" class="page">
+
+<div class="page-title">
+فواتير البيع
+</div>
+
+<div class="card">
+<input id="invoiceSearch"
+       placeholder="ابحث برقم الفاتورة أو اسم الصيدلية"
+       oninput="renderInvoices()">
+</div>
+
+<div class="card table-wrap">
+<table>
+
+<thead>
+<tr>
+<th>رقم الفاتورة</th>
+<th>التاريخ</th>
+<th>الصيدلية</th>
+<th>المندوب</th>
+<th>الإجمالي</th>
+<th>العمولة</th>
+<th>الإجراءات</th>
+</tr>
+</thead>
+
+<tbody id="invoiceTable"></tbody>
+
+</table>
+</div>
+
+</section>
+
+
+<section id="approvals" class="page">
+
+<div class="page-title">
+طلبات الموافقة
+</div>
+
+<div class="card">
+<p>
+طلبات المندوبين بانتظار الموافقة.
+</p>
+</div>
+
+</section>
+
+
+<section id="purchases" class="page">
+
+<div class="page-title">
+المشتريات
+</div>
+
+<div class="card">
+
+<div class="form-grid">
+
+<div>
+<label>المورد</label>
+<select id="purchaseSupplier"></select>
+</div>
+
+<div>
+<label>الصنف</label>
+<select id="purchaseItem"></select>
+</div>
+
+<div>
+<label>الكمية</label>
+<input type="number" id="purchaseQty" value="1">
+</div>
+
+<div>
+<label>سعر الشراء</label>
+<input type="number" id="purchasePrice" value="0">
+</div>
+
+</div>
+
+<br>
+
+<button class="btn btn-green" onclick="savePurchase()">
+إضافة للمخزون
+</button>
+
+</div>
+
+</section>
+
+
+<section id="returns" class="page">
+
+<div class="page-title">
+المرتجعات
+</div>
+
+<div class="card">
+
+<div class="form-grid">
+
+<div>
+<label>الصيدلية</label>
+<select id="returnCustomer"></select>
+</div>
+
+<div>
+<label>المندوب</label>
+<select id="returnRep"></select>
+</div>
+
+<div>
+<label>التاريخ</label>
+<input type="date" id="returnDate">
+</div>
+
+<div>
+<label>رقم الفاتورة الأصلية</label>
+<input id="returnInvoiceNo" placeholder="اختياري">
+</div>
+
+</div>
+
+</div>
+
+<div class="card">
+
+<div class="table-wrap">
+<table>
+
+<thead>
+<tr>
+<th>الصنف</th>
+<th>الكمية</th>
+<th>السعر</th>
+<th>السبب</th>
+<th>الإجمالي</th>
+<th>حذف</th>
+</tr>
+</thead>
+
+<tbody id="returnLines"></tbody>
+
+</table>
+</div>
+
+<br>
+
+<button class="btn btn-blue" onclick="addReturnLine()">
++ إضافة صنف مرتجع
+</button>
+
+<div class="invoice-total">
+إجمالي المرتجع:
+<span id="returnTotal">0.00</span>
+</div>
+
+<br>
+
+<label>ملاحظة</label>
+<textarea id="returnNote"></textarea>
+
+<br><br>
+
+<button class="btn btn-green" onclick="saveReturn()">
+حفظ فاتورة المرتجع
+</button>
+
+</div>
+
+</section>
+
+
+<section id="items" class="page">
+
+<div class="page-title">
+الأصناف والتصنيفات
+</div>
+
+<div class="card actions">
+
+<button class="btn btn-green" onclick="openItemModal()">
++ صنف جديد
+</button>
+  <button class="btn btn-blue" onclick="document.getElementById('itemsExcelFile').click()">
+📥 استيراد Excel
+</button>
+
+<input type="file"
+       id="itemsExcelFile"
+       accept=".xlsx,.xls"
+       style="display:none"
+       onchange="importItemsExcel(this)">
+
+<button class="btn btn-green" onclick="exportItemsExcel()">
+📤 تصدير Excel
+</button>
+
+<button class="btn btn-red" onclick="exportItemsPDF()">
+📄 تصدير PDF
+</button>
+<button id="deleteItemsBtn" class="btn btn-red" type="button" onclick="deleteItemsReal()">
+🗑️ حذف كل الأصناف
+</button>
+
+<button id="replaceItemsBtn" class="btn btn-blue" type="button" onclick="replaceItemsReal()">
+🔄 استبدال من Excel
+</button>
+</div>
+
+<div class="card">
+
+<input id="itemSearch"
+       placeholder="اسم الصنف / الاسم العلمي / الباركود"
+       oninput="renderItems()">
+
+</div>
+
+<div class="card table-wrap">
+
+<table>
+
+<thead>
+<tr>
+<th>الصنف</th>
+<th>الشركة</th>
+<th>التصنيف</th>
+<th>المخزون</th>
+<th>سعر البيع</th>
+<th>حد النقص</th>
+<th>خيارات</th>
+</tr>
+</thead>
+
+<tbody id="itemsTable"></tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<section id="warehouses" class="page">
+
+<div class="page-title">
+المخزون والمستودعات
+</div>
+
+<div class="cards">
+
+<div class="stat">
+<small>إجمالي الكمية</small>
+<strong id="warehouseQty">0</strong>
+</div>
+
+<div class="stat">
+<small>الأصناف بالسالب</small>
+<strong id="negativeStockCount">0</strong>
+</div>
+
+<div class="stat">
+<small>أصناف تحت حد النقص</small>
+<strong id="lowStockCount">0</strong>
+</div>
+
+</div>
+
+<div class="card table-wrap">
+<table>
+<thead>
+<tr>
+<th>الصنف</th>
+<th>المخزون</th>
+<th>حد النقص</th>
+<th>الحالة</th>
+</tr>
+</thead>
+<tbody id="warehouseTable"></tbody>
+</table>
+</div>
+
+</section>
+
+
+<section id="customers" class="page">
+
+<div class="page-title">
+الصيدليات
+</div>
+
+<div class="card actions">
+
+<button class="btn btn-green" onclick="openCustomerModal()">
++ صيدلية جديدة</button>
+<button class="btn btn-blue" onclick="document.getElementById('customersExcelFile').click()">
+  📥 استيراد من Excel
+</button>
+
+<input type="file"
+       id="customersExcelFile"
+       accept=".xlsx,.xls"
+       style="display:none"
+       onchange="importCustomersExcel(event)">
+
+</div>
+
+<div class="cards">
+
+<div class="stat">
+<small>عدد الصيدليات</small>
+<strong id="customerCount">0</strong>
+</div>
+
+<div class="stat">
+<small>إجمالي الدين</small>
+<strong id="customerDebt">0.00</strong>
+</div>
+
+<div class="stat">
+<small>تجاوزت حد الدين</small>
+<strong id="customerOverLimit">0</strong>
+</div>
+
+</div>
+
+<div class="card table-wrap">
+
+<table>
+
+<thead>
+<tr>
+<th>الصيدلية</th>
+<th>الهاتف</th>
+<th>الترخيص</th>
+<th>الخصم %</th>
+<th>حد الدين</th>
+<th>الرصيد</th>
+</tr>
+</thead>
+
+<tbody id="customersTable"></tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<section id="suppliers" class="page">
+
+<div class="page-title">
+الموردون
+</div>
+
+<div class="card">
+
+<div class="form-grid">
+
+<div>
+<label>اسم المورد</label>
+<input id="supplierName">
+</div>
+
+<div>
+<label>الهاتف</label>
+<input id="supplierPhone">
+</div>
+
+</div>
+
+<br>
+
+<button class="btn btn-green" onclick="saveSupplier()">
+إضافة المورد
+</button>
+
+</div>
+
+<div class="card table-wrap">
+
+<table>
+<thead>
+<tr>
+<th>المورد</th>
+<th>الهاتف</th>
+</tr>
+</thead>
+
+<tbody id="suppliersTable"></tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<section id="reps" class="page">
+
+<div class="page-title">
+المندوبون والعمولات
+</div>
+
+<div class="card">
+
+<div class="form-grid">
+
+<div>
+<label>اسم المندوب</label>
+<input id="repName">
+</div>
+
+<div>
+<label>الهاتف</label>
+<input id="repPhone">
+</div>
+
+</div>
+
+<br>
+
+<button class="btn btn-green" onclick="saveRep()">
+إضافة مندوب
+</button>
+
+</div>
+
+<div class="card table-wrap">
+
+<table>
+<thead>
+<tr>
+<th>المندوب</th>
+<th>الهاتف</th>
+<th>العمولة المكتسبة</th>
+</tr>
+</thead>
+
+<tbody id="repsTable"></tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<section id="companies" class="page">
+
+<div class="page-title">
+الشركات الصانعة
+</div>
+
+<div class="card actions">
+
+<button class="btn btn-green" onclick="openCompanyModal()">
++ شركة جديدة
+</button>
+
+</div>
+
+<div class="cards">
+
+<div class="stat">
+<small>إجمالي الشركات</small>
+<strong id="companiesCount">0</strong>
+</div>
+
+<div class="stat">
+<small>الشركات الفعالة</small>
+<strong id="companiesActive">0</strong>
+</div>
+
+<div class="stat">
+<small>إجمالي الأصناف</small>
+<strong id="companiesItems">0</strong>
+</div>
+
+<div class="stat">
+<small>متوسط عمولة المندوب</small>
+<strong id="companiesAvgCommission">0%</strong>
+</div>
+
+</div>
+
+<div class="card table-wrap">
+
+<table>
+
+<thead>
+<tr>
+<th>الشركة</th>
+<th>عمولة المندوب %</th>
+<th>العرض الافتراضي</th>
+<th>عدد الأصناف</th>
+</tr>
+</thead>
+
+<tbody id="companiesTable"></tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<section id="receipts" class="page">
+
+<div class="page-title">
+سندات القبض
+</div>
+
+<div class="card">
+
+<div class="form-grid">
+
+<div>
+<label>الصيدلية</label>
+<select id="receiptCustomer"></select>
+</div>
+
+<div>
+<label>المندوب</label>
+<select id="receiptRep"></select>
+</div>
+
+<div>
+<label>المبلغ</label>
+<input type="number" id="receiptAmount">
+</div>
+
+<div>
+<label>التاريخ</label>
+<input type="date" id="receiptDate">
+</div>
+
+</div>
+
+<br>
+
+<button class="btn btn-green" onclick="saveReceipt()">
+حفظ سند القبض
+</button>
+
+</div>
+
+<div class="card table-wrap">
+
+<table>
+<thead>
+<tr>
+<th>الرقم</th>
+<th>التاريخ</th>
+<th>الصيدلية</th>
+<th>المندوب</th>
+<th>المبلغ</th>
+</tr>
+</thead>
+
+<tbody id="receiptsTable"></tbody>
+
+</table>
+
+</div>
+
+</section>
+
+
+<section id="cash" class="page">
+
+<div class="page-title">
+الخزينة والمصاريف
+</div>
+
+<div class="card">
+
+<div class="form-grid">
+
+<div>
+<label>النوع</label>
+<select id="cashType">
+<option value="income">قبض</option>
+<option value="expense">مصروف</option>
+</select>
+</div>
+
+<div>
+<label>المبلغ</label>
+<input type="number" id="cashAmount">
+</div>
+
+<div>
+<label>البيان</label>
+<input id="cashNote">
+</div>
+
+</div>
+
+<br>
+
+<button class="btn btn-green" onclick="saveCash()">
+حفظ
+</button>
+
+</div>
+
+<div class="cards">
+
+<div class="stat">
+<small>رصيد الخزينة</small>
+<strong id="cashBalance">0.00</strong>
+</div>
+
+</div>
+
+</section>
+
+
+<section id="reports" class="page">
+
+<div class="page-title">
+التقارير
+</div>
+
+<div class="cards">
+
+<div class="stat">
+<small>المبيعات</small>
+<strong id="reportSales">0.00</strong>
+</div>
+
+<div class="stat">
+<small>المرتجعات</small>
+<strong id="reportReturns">0.00</strong>
+</div>
+
+<div class="stat">
+<small>التحصيلات</small>
+<strong id="reportReceipts">0.00</strong>
+</div>
+
+<div class="stat">
+<small>عمولات المندوبين</small>
+<strong id="reportCommission">0.00</strong>
+</div>
+
+</div>
+
+</section>
+
+
+<section id="settings" class="page">
+
+<div class="page-title">
+الإعدادات
+</div>
+
+<div class="card">
+<h3>بيانات المستودع</h3>
+
+<div class="form-grid">
+
+<div>
+<label>اسم المستودع</label>
+<input id="settingsWarehouseName">
+</div>
+
+<div>
+<label>رمز العملة</label>
+<input id="settingsCurrency">
+</div>
+
+<div>
+<label>الهاتف</label>
+<input id="settingsPhone">
+</div>
+
+<div>
+<label>العنوان</label>
+<input id="settingsAddress">
+</div>
+
+<div>
+<label>أيام تنبيه قرب انتهاء الصلاحية</label>
+<input type="number" id="settingsExpiryDays">
+</div>
+
+<div>
+<label>حد النقص الافتراضي</label>
+<input type="number" id="settingsLowStock">
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>الترويسة والشعار</h3>
+
+<div class="logo-preview" id="logoPreview">
+بدون شعار
+</div>
+
+<br>
+
+<input type="file"
+       id="logoInput"
+       accept="image/png,image/jpeg,image/webp"
+       onchange="changeLogo(this)">
+
+<br><br>
+
+<button class="btn btn-red" onclick="removeLogo()">
+حذف الشعار
+</button>
+
+<br><br>
+
+<div class="form-grid">
+
+<div>
+<label>حجم الورق</label>
+<select id="settingsPaper">
+<option value="A4">A4</option>
+<option value="80mm">حراري 80mm</option>
+</select>
+</div>
+
+<div>
+<label>ترويسة الفاتورة</label>
+<input id="settingsInvoiceHeader">
+</div>
+
+<div>
+<label>النص أسفل الفاتورة</label>
+<input id="settingsInvoiceFooter">
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>الدولار والمخزون</h3>
+
+<div class="form-grid">
+
+<div>
+<label>تفعيل ربط الدولار</label>
+<select id="settingsDollarEnabled">
+<option value="0">معطل</option>
+<option value="1">مفعل</option>
+</select>
+</div>
+
+<div>
+<label>سعر الدولار</label>
+<input type="number" id="settingsDollarRate">
+</div>
+
+<div>
+<label>البيع بالسالب</label>
+<select id="settingsNegativeStock">
+<option value="1">مسموح</option>
+<option value="0">غير مسموح</option>
+</select>
+</div>
+
+</div>
+
+</div>
+
+
+<div class="card">
+
+<h3>طرق الدفع</h3>
+
+<div id="paymentMethods"></div>
+
+<br>
+
+<div style="display:flex;gap:8px">
+
+<input id="newPaymentMethod"
+       placeholder="اسم طريقة الدفع">
+
+<button class="btn btn-green"
+        onclick="addPaymentMethod()">
++ إضافة
+</button>
+
+</div>
+
+</div>
+
+
+<button class="btn btn-green"
+        style="width:100%;padding:15px;font-size:17px"
+        onclick="saveSettings()">
+💾 حفظ الإعدادات
+</button>
+
+</section>
+
+</main>
+</div>
+
+
+<div id="invoiceModal" class="modal">
+<div class="modal-box">
+
+<div class="modal-title">
+تفاصيل الفاتورة
+</div>
+
+<div id="invoiceDetails"></div>
+
+<br>
+
+<button class="btn btn-gray"
+        onclick="closeModal('invoiceModal')">
+إغلاق
+</button>
+
+</div>
+</div>
+
+
+<div id="itemModal" class="modal">
+<div class="modal-box">
+
+<div class="modal-title" id="itemModalTitle">
+صنف جديد
+</div>
+
+<input type="hidden" id="itemEditId">
+
+<div class="form-grid">
+
+<div>
+<label>اسم الصنف</label>
+<input id="itemName">
+</div>
+
+<div>
+<label>الاسم العلمي</label>
+<input id="itemScientific">
+</div>
+
+<div>
+<label>الباركود</label>
+<input id="itemBarcode">
+</div>
+
+<div>
+<label>الشركة</label>
+<select id="itemCompany"></select>
+</div>
+
+<div>
+<label>التصنيف</label>
+<input id="itemCategory">
+</div>
+
+<div>
+<label>المخزون</label>
+<input type="number" id="itemQty">
+</div>
+
+<div>
+<label>سعر البيع</label>
+<input type="number" id="itemPrice">
+</div>
+
+<div>
+<label>سعر الشراء</label>
+<input type="number" id="itemCost">
+</div>
+
+<div>
+<label>حد النقص</label>
+<input type="number" id="itemMinQty">
+</div>
+
+<div>
+<label>عمولة خاصة للمندوب %</label>
+<input type="number" id="itemCommission">
+</div>
+
+<div>
+<label>شراء للعرض</label>
+<input type="number" id="itemBuyQty">
+</div>
+
+<div>
+<label>بونص العرض</label>
+<input type="number" id="itemFreeQty">
+</div>
+
+</div>
+
+<br>
+
+<button class="btn btn-green" onclick="saveItem()">
+حفظ الصنف
+</button>
+
+<button class="btn btn-gray"
+        onclick="closeModal('itemModal')">
+إلغاء
+</button>
+
+</div>
+</div>
+
+
+<div id="customerModal" class="modal">
+<div class="modal-box">
+
+<div class="modal-title">
+صيدلية جديدة
+</div>
+
+<div class="form-grid">
+
+<div>
+<label>اسم الصيدلية</label>
+<input id="customerName">
+</div>
+
+<div>
+<label>الهاتف</label>
+<input id="customerPhone">
+</div>
+
+<div>
+<label>رقم الترخيص</label>
+<input id="customerLicense">
+</div>
+
+<div>
+<label>الخصم %</label>
+<input type="number" id="customerDiscount" value="0">
+</div>
+
+<div>
+<label>حد الدين</label>
+<input type="number" id="customerLimit" value="0">
+</div>
+
+<div>
+<label>العنوان</label>
+<input id="customerAddress">
+</div>
+
+</div>
+
+<br>
+
+<button class="btn btn-green"
+        onclick="saveCustomer()">
+حفظ
+</button>
+
+<button class="btn btn-gray"
+        onclick="closeModal('customerModal')">
+إلغاء
+</button>
+
+</div>
+</div>
+
+
+<div id="companyModal" class="modal">
+<div class="modal-box">
+
+<div class="modal-title">
+شركة جديدة
+</div>
+
+<div class="form-grid">
+
+<div>
+<label>اسم الشركة</label>
+<input id="companyName">
+</div>
+
+<div>
+<label>نسبة عمولة المندوب %</label>
+<input type="number" id="companyCommission">
+</div>
+
+<div>
+<label>شراء</label>
+<input type="number" id="companyBuyQty">
+</div>
+
+<div>
+<label>مجاني</label>
+<input type="number" id="companyFreeQty">
+</div>
+
+<div>
+<label>ملاحظة</label>
+<input id="companyNote">
+</div>
+
+</div>
+
+<br>
+
+<button class="btn btn-green"
+        onclick="saveCompany()">
+حفظ الشركة
+</button>
+
+<button class="btn btn-gray"
+        onclick="closeModal('companyModal')">
+إلغاء
+</button>
+
+</div>
+</div>
+
+
+<div id="printInvoice"></div>
+
+<div class="toast" id="toast"></div>
+<script>
+const $ = id => document.getElementById(id);
+const KEY = "alamiyaAccountingV3";
+const DRAFT_KEY = "alamiyaSaleDraftV3";
+
+function uid(){
+  return Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+}
+
+function today(){
+  return new Date().toISOString().slice(0,10);
+}
+
+function esc(v=""){
+  return String(v).replace(/[&<>"']/g,m=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",
+    '"':"&quot;","'":"&#039;"
+  }[m]));
+}
+
+function money(v){
+  return Number(v||0).toLocaleString("en-US",{
+    minimumFractionDigits:2,
+    maximumFractionDigits:2
+  });
+}
+
+const defaults = {
+  items:[],
+  customers:[],
+  suppliers:[],
+  reps:[],
+  companies:[],
+  invoices:[],
+  purchases:[],
+  returns:[],
+  receipts:[],
+  cash:[],
+  settings:{
+    warehouseName:"مستودع العالمية لتجارة الأدوية",
+    currency:"ل.س",
+    phone:"",
+    address:"",
+    logo:"",
+    paper:"A4",
+    invoiceHeader:"فاتورة مبيعات",
+    invoiceFooter:"شكراً لتعاملكم معنا",
+    allowNegativeStock:true,
+    dollarEnabled:false,
+    dollarRate:0,
+    expiryDays:90,
+    lowStock:30,
+    paymentMethods:["نقد","بالأجل","شام كاش","حوالة بنكية","شيك"]
+  }
+};
+
+let db;
+try{
+  db=JSON.parse(localStorage.getItem(KEY))||structuredClone(defaults);
+}catch(e){
+  db=structuredClone(defaults);
+}
+
+Object.keys(defaults).forEach(k=>{
+  if(db[k]===undefined) db[k]=structuredClone(defaults[k]);
+});
+
+db.settings={...defaults.settings,...(db.settings||{})};
+
+let sale=[];
+let editingInvoiceId=null;
+let returnRows=[];
+
+function saveDB(){
+  localStorage.setItem(KEY,JSON.stringify(db));
+}
+
+function toast(t){
+  const e=$("toast");
+  e.textContent=t;
+  e.style.display="block";
+  setTimeout(()=>e.style.display="none",2200);
+}
+
+function toggleMenu(){
+  $("sidebar").classList.toggle("open");
+}
+
+function showPage(id){
+  saveSaleDraft();
+
+  document.querySelectorAll(".page").forEach(x=>
+    x.classList.remove("active")
+  );
+
+  $(id)?.classList.add("active");
+  $("sidebar").classList.remove("open");
+
+  if(id==="sale") restoreSaleDraft();
+
+  renderAll();
+}
+
+function openModal(id){
+  $(id).classList.add("show");
+}
+
+function closeModal(id){
+  $(id).classList.remove("show");
+}
+
+function nextNo(prefix,list){
+  let max=0;
+  list.forEach(x=>{
+    const n=parseInt(String(x.number||"").replace(/\D/g,""));
+    if(n>max) max=n;
+  });
+  return prefix+"-"+String(max+1).padStart(5,"0");
+}
+
+function fillSelect(id,list,label="اختر"){
+  const e=$(id);
+  if(!e)return;
+
+  const old=e.value;
+
+  e.innerHTML=
+  `<option value="">${label}</option>`+
+  list.map(x=>
+    `<option value="${x.id}">${esc(x.name)}</option>`
+  ).join("");
+
+  if([...e.options].some(x=>x.value===old)) e.value=old;
+}
+
+function companyRate(item){
+  if(item.commissionOverride!==null &&
+     item.commissionOverride!==undefined &&
+     item.commissionOverride!==""){
+    return Number(item.commissionOverride||0);
+  }
+
+  const c=db.companies.find(x=>x.id===item.companyId);
+  return Number(c?.commission||0);
+}
+
+/* =========================
+   حفظ فاتورة البيع أثناء التنقل
+========================= */
+
+function saveSaleDraft(){
+  if(!$("saleCustomer"))return;
+
+  localStorage.setItem(DRAFT_KEY,JSON.stringify({
+    sale,
+    customerId:$("saleCustomer").value,
+    repId:$("saleRep").value,
+    date:$("saleDate").value,
+    editingInvoiceId
+  }));
+}
+
+function restoreSaleDraft(){
+  try{
+    const d=JSON.parse(localStorage.getItem(DRAFT_KEY));
+    if(!d)return;
+
+    if(Array.isArray(d.sale)) sale=d.sale;
+    editingInvoiceId=d.editingInvoiceId||null;
+
+    renderSale();
+
+    $("saleCustomer").value=d.customerId||"";
+    $("saleRep").value=d.repId||"";
+    $("saleDate").value=d.date||today();
+  }catch(e){}
+}
+
+function clearSaleDraft(){
+  sale=[];
+  editingInvoiceId=null;
+  localStorage.removeItem(DRAFT_KEY);
+
+  $("saleCustomer").value="";
+  $("saleRep").value="";
+  $("saleDate").value=today();
+
+  renderSale();
+  toast("تم فتح فاتورة جديدة");
+}
+
+/* =========================
+   البيع
+========================= */
+
+function addSaleLine(){
+  sale.push({
+    itemId:"",
+    qty:1,
+    bonus:0,
+    price:0,
+    commissionRate:0
+  });
+
+  renderSale();
+}
+
+function selectSaleItem(i,id){
+  const item=db.items.find(x=>x.id===id);
+  sale[i].itemId=id;
+
+  if(item){
+    sale[i].price=Number(item.price||0);
+    sale[i].commissionRate=companyRate(item);
+
+    let buy=Number(item.buyQty||0);
+    let free=Number(item.freeQty||0);
+
+    if(!buy){
+      const c=db.companies.find(x=>x.id===item.companyId);
+      buy=Number(c?.buyQty||0);
+      free=Number(c?.freeQty||0);
+    }
+// قراءة العرض مثل 10+3
+if(!buy && item.offer){
+  const m=String(item.offer).match(/(\d+)\s*\+\s*(\d+)/);
+  if(m){
+    buy=Number(m[1]);
+    free=Number(m[2]);
+  }
+    }
+    if(buy>0){
+      sale[i].bonus=
+      Math.floor(Number(sale[i].qty||0)/buy)*free;
+    }
+  }
+
+  renderSale();
+  saveSaleDraft();
+}
+
+function calculateSale(){
+  let total=0;
+  let commission=0;
+
+  sale.forEach(r=>{
+    const line=Number(r.qty||0)*Number(r.price||0);
+    total+=line;
+    commission+=line*Number(r.commissionRate||0)/100;
+  });
+
+  $("saleTotal").textContent=money(total);
+  $("saleCommission").textContent=money(commission);
+
+  saveSaleDraft();
+}
+
+function renderSale(){
+  if(!sale.length) addSaleLine();
+
+  $("saleLines").innerHTML=sale.map((r,i)=>`
+    <tr>
+      <td>
+        <select onchange="selectSaleItem(${i},this.value)">
+          <option value="">اختر الصنف</option>
+          ${db.items
+            .filter(x=>x.active!==false)
+            .map(it=>`
+              <option value="${it.id}"
+              ${it.id===r.itemId?"selected":""}>
+              ${esc(it.name)} — مخزون ${Number(it.qty||0)}
+              </option>
+            `).join("")}
+        </select>
+      </td>
+
+      <td>
+  <input type="number" min="1"
+  value="${Number(r.qty||1)}"
+  onchange="
+    sale[${i}].qty=Number(this.value||0);
+const item=db.items.find(x=>x.id===sale[${i}].itemId);
+
+if(item){
+  let buy=Number(item.buyQty||0);
+  let free=Number(item.freeQty||0);
+
+  if(!buy){
+    const c=db.companies.find(x=>x.id===item.companyId);
+    buy=Number(c?.buyQty||0);
+    free=Number(c?.freeQty||0);
+  }
+
+  if(buy>0){
+    sale[${i}].bonus=
+      Math.floor(Number(sale[${i}].qty||0)/buy)*free;
+  this.closest('tr').querySelector('input[type=number][min=0]').value=sale[${i}].bonus;    
+  
+  }
+}
+
+calculateSale();
+  ">
+      </td>
+
+      <td>
+        <input type="number" min="0"
+        value="${Number(r.bonus||0)}"
+        oninput="
+          sale[${i}].bonus=Number(this.value||0);
+          calculateSale();
+        ">
+      </td>
+
+      <td>
+        <input type="number" step="0.01"
+        value="${Number(r.price||0)}"
+        oninput="
+          sale[${i}].price=Number(this.value||0);
+          calculateSale();
+        ">
+      </td>
+
+      <td>
+        ${money(Number(r.qty||0)*Number(r.price||0))}
+      </td>
+
+      <td>
+        <button class="btn btn-red"
+        onclick="
+          sale.splice(${i},1);
+          renderSale();
+          saveSaleDraft();
+        ">حذف</button>
+      </td>
+    </tr>
+  `).join("");
+
+  calculateSale();
+}
+
+function restoreInvoiceStock(inv){
+  (inv.lines||[]).forEach(l=>{
+    const item=db.items.find(x=>x.id===l.itemId);
+    if(item){
+      item.qty=
+      Number(item.qty||0)+
+      Number(l.qty||0)+
+      Number(l.bonus||0);
+    }
+  });
+}
+
+function saveSale(){
+  const customerId=$("saleCustomer").value;
+
+  if(!customerId){
+    return alert("اختر الصيدلية");
+  }
+
+  let lines=sale.filter(x=>x.itemId && Number(x.qty)>0);
+
+  if(!lines.length){
+    return alert("أضف صنفاً إلى الفاتورة");
+  }
+
+  if(!db.settings.allowNegativeStock){
+    for(const r of lines){
+      const item=db.items.find(x=>x.id===r.itemId);
+      const need=Number(r.qty||0)+Number(r.bonus||0);
+
+      if(Number(item?.qty||0)<need){
+        return alert("المخزون غير كافٍ: "+item.name);
+      }
+    }
+  }
+
+  let old=null;
+
+  if(editingInvoiceId){
+    old=db.invoices.find(x=>x.id===editingInvoiceId);
+    if(old)restoreInvoiceStock(old);
+  }
+
+  let total=0;
+  let commissionTotal=0;
+
+  lines=lines.map(r=>{
+    const item=db.items.find(x=>x.id===r.itemId);
+
+    const lineTotal=
+    Number(r.qty||0)*Number(r.price||0);
+
+    const commission=
+    lineTotal*Number(r.commissionRate||0)/100;
+
+    item.qty=
+    Number(item.qty||0)-
+    Number(r.qty||0)-
+    Number(r.bonus||0);
+
+    total+=lineTotal;
+    commissionTotal+=commission;
+
+    return{
+      ...r,
+      name:item.name,
+      total:lineTotal,
+      commission
+    };
+  });
+
+  const customer=
+  db.customers.find(x=>x.id===customerId);
+
+  const rep=
+  db.reps.find(x=>x.id===$("saleRep").value);
+
+  if(editingInvoiceId && old){
+
+    Object.assign(old,{
+      date:$("saleDate").value||today(),
+      customerId,
+      customerName:customer?.name||"",
+      repId:rep?.id||"",
+      repName:rep?.name||"",
+      lines,
+      total,
+      commissionTotal
+    });
+
+  }else{
+
+    db.invoices.unshift({
+      id:uid(),
+      number:nextNo("INV",db.invoices),
+      date:$("saleDate").value||today(),
+      customerId,
+      customerName:customer?.name||"",
+      repId:rep?.id||"",
+      repName:rep?.name||"",
+      lines,
+      total,
+      commissionTotal
+    });
+
+  }
+
+  saveDB();
+
+  sale=[];
+  editingInvoiceId=null;
+  localStorage.removeItem(DRAFT_KEY);
+
+  renderAll();
+  showPage("invoices");
+
+  toast("تم حفظ الفاتورة");
+}
+
+/* =========================
+   الفواتير
+========================= */
+
+function renderInvoices(){
+  const q=($("invoiceSearch")?.value||"").toLowerCase();
+
+  const list=db.invoices.filter(x=>
+    (x.number+" "+x.customerName)
+    .toLowerCase()
+    .includes(q)
+  );
+
+  $("invoiceTable").innerHTML=
+  list.length
+  ?list.map(x=>`
+    <tr>
+      <td><b>${esc(x.number)}</b></td>
+      <td>${esc(x.date)}</td>
+      <td>${esc(x.customerName)}</td>
+      <td>${esc(x.repName||"")}</td>
+      <td>${money(x.total)}</td>
+      <td>${money(x.commissionTotal)}</td>
+      <td>
+        <div class="actions">
+
+          <button class="btn btn-gray"
+          onclick="viewInvoice('${x.id}')">
+          عرض
+          </button>
+
+          <button class="btn btn-green"
+          onclick="shareInvoicePDF('${x.id}')">
+          PDF واتساب
+          </button>
+
+          <button class="btn btn-blue"
+          onclick="exportInvoicePDF('${x.id}')">
+          PDF
+          </button>
+
+          <button class="btn btn-orange"
+          onclick="editInvoice('${x.id}')">
+          تعديل
+          </button>
+
+          <button class="btn btn-blue"
+          onclick="returnInvoice('${x.id}')">
+          إرجاع
+          </button>
+
+          <button class="btn btn-red"
+          onclick="deleteInvoice('${x.id}')">
+          حذف
+          </button>
+
+        </div>
+      </td>
+    </tr>
+  `).join("")
+  :`<tr><td colspan="7">لا توجد فواتير</td></tr>`;
+}
+
+function viewInvoice(id){
+  const x=db.invoices.find(r=>r.id===id);
+  if(!x)return;
+
+  $("invoiceDetails").innerHTML=`
+    ${db.settings.logo
+      ?`<div style="text-align:center">
+          <img src="${db.settings.logo}"
+          style="max-width:120px;max-height:90px">
+        </div>`
+      :""
+    }
+
+    <h2 style="text-align:center">
+    ${esc(db.settings.warehouseName)}
+    </h2>
+
+    <p>
+    رقم الفاتورة:
+    <b>${esc(x.number)}</b>
+    </p>
+
+    <p>
+    الصيدلية:
+    <b>${esc(x.customerName)}</b>
+    </p>
+
+    <p>
+    المندوب:
+    ${esc(x.repName||"")}
+    </p>
+
+    <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>الصنف</th>
+          <th>الكمية</th>
+          <th>البونص</th>
+          <th>السعر</th>
+          <th>الإجمالي</th>
+        </tr>
+      </thead>
+
+      <tbody>
+      ${(x.lines||[]).map(l=>`
+        <tr>
+          <td>${esc(l.name)}</td>
+          <td>${l.qty}</td>
+          <td>${l.bonus||0}</td>
+          <td>${money(l.price)}</td>
+          <td>${money(l.total)}</td>
+        </tr>
+      `).join("")}
+      </tbody>
+    </table>
+    </div>
+
+    <h2>
+    الإجمالي:
+    ${money(x.total)}
+    ${esc(db.settings.currency)}
+    </h2>
+
+    <p>
+    عمولة المندوب:
+    ${money(x.commissionTotal)}
+    </p>
+
+    <div class="actions">
+
+      <button class="btn btn-gray"
+      onclick="printInvoice('${x.id}')">
+      🖨️ طباعة
+      </button>
+
+      <button class="btn btn-blue"
+      onclick="exportInvoicePDF('${x.id}')">
+      ⬇️ تصدير PDF
+      </button>
+
+      <button class="btn btn-green"
+      onclick="shareInvoicePDF('${x.id}')">
+      📄 PDF واتساب
+      </button>
+
+      <button class="btn btn-orange"
+      onclick="editInvoice('${x.id}')">
+      ✏️ تعديل
+      </button>
+
+      <button class="btn btn-blue"
+      onclick="returnInvoice('${x.id}')">
+      ↩️ إرجاع
+      </button>
+
+      <button class="btn btn-red"
+      onclick="deleteInvoice('${x.id}')">
+      🗑️ حذف
+      </button>
+
+    </div>
+  `;
+
+  openModal("invoiceModal");
+}
+
+function editInvoice(id){
+  const x=db.invoices.find(r=>r.id===id);
+  if(!x)return;
+
+  editingInvoiceId=x.id;
+
+  sale=(x.lines||[]).map(l=>({
+    itemId:l.itemId,
+    qty:Number(l.qty||0),
+    bonus:Number(l.bonus||0),
+    price:Number(l.price||0),
+    commissionRate:Number(
+      l.commissionRate||
+      (
+        Number(l.total||0)
+        ?Number(l.commission||0)/Number(l.total)*100
+        :0
+      )
+    )
+  }));
+
+  localStorage.setItem(DRAFT_KEY,JSON.stringify({
+    sale,
+    customerId:x.customerId,
+    repId:x.repId,
+    date:x.date,
+    editingInvoiceId:x.id
+  }));
+
+  closeModal("invoiceModal");
+  showPage("sale");
+}
+
+function deleteInvoice(id){
+  if(!confirm("هل تريد حذف الفاتورة؟"))return;
+
+  const x=db.invoices.find(r=>r.id===id);
+
+  if(x)restoreInvoiceStock(x);
+
+  db.invoices=
+  db.invoices.filter(r=>r.id!==id);
+
+  saveDB();
+  closeModal("invoiceModal");
+  renderAll();
+
+  toast("تم حذف الفاتورة");
+}
+
+/* =========================
+   PDF + طباعة + واتساب
+========================= */
+
+function invoicePrintHTML(x){
+
+  const logo=db.settings.logo
+  ?`<img src="${db.settings.logo}">`
+  :"";
+
+  const dollar=
+  db.settings.dollarEnabled &&
+  Number(db.settings.dollarRate)>0
+  ?`
+    <div>
+    يعادل تقريباً:
+    $${money(Number(x.total)/Number(db.settings.dollarRate))}
+    </div>
+  `
+  :"";
+
+  return`
+  <div class="print-header">
+    ${logo}
+
+    <div class="print-title">
+    ${esc(db.settings.warehouseName)}
+    </div>
+
+    <div>
+    ${esc(db.settings.invoiceHeader)}
+    </div>
+
+    ${db.settings.phone
+      ?`<div>الهاتف: ${esc(db.settings.phone)}</div>`
+      :""
+    }
+
+    ${db.settings.address
+      ?`<div>${esc(db.settings.address)}</div>`
+      :""
+    }
+  </div>
+
+  <div class="print-info">
+
+    <div>
+    رقم الفاتورة:
+    <b>${esc(x.number)}</b>
+    </div>
+
+    <div>
+    التاريخ:
+    ${esc(x.date)}
+    </div>
+
+    <div>
+    الصيدلية:
+    <b>${esc(x.customerName)}</b>
+    </div>
+
+    <div>
+    المندوب:
+    ${esc(x.repName||"")}
+    </div>
+
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>الصنف</th>
+        <th>الكمية</th>
+        <th>البونص</th>
+        <th>السعر</th>
+        <th>الإجمالي</th>
+      </tr>
+    </thead>
+
+    <tbody>
+    ${(x.lines||[]).map(l=>`
+      <tr>
+        <td>${esc(l.name)}</td>
+        <td>${l.qty}</td>
+        <td>${l.bonus||0}</td>
+        <td>${money(l.price)}</td>
+        <td>${money(l.total)}</td>
+      </tr>
+    `).join("")}
+    </tbody>
+  </table>
+
+  <div class="print-total">
+  الإجمالي:
+  ${money(x.total)}
+  ${esc(db.settings.currency)}
+  </div>
+
+  ${dollar}
+
+  <div style="text-align:center;margin-top:25px">
+  ${esc(db.settings.invoiceFooter)}
+  </div>
+  `;
+}
+
+function prepareInvoice(id){
+  const x=db.invoices.find(r=>r.id===id);
+  if(!x)return null;
+
+  $("printInvoice").innerHTML=
+  invoicePrintHTML(x);
+
+  return x;
+}
+
+function printInvoice(id){
+  if(!prepareInvoice(id))return;
+  window.print();
+}
+
+async function makePDF(id){
+  const x=prepareInvoice(id);
+  if(!x)throw new Error();
+
+  const area=$("printInvoice");
+
+  area.style.display="block";
+
+  const canvas=
+  await html2canvas(area,{
+    scale:2,
+    backgroundColor:"#ffffff",
+    useCORS:true
+  });
+
+  area.style.display="none";
+
+  const {jsPDF}=window.jspdf;
+
+  const pdf=new jsPDF(
+    "p",
+    "mm",
+    db.settings.paper==="80mm"
+      ?[80,200]
+      :"a4"
+  );
+
+  const w=pdf.internal.pageSize.getWidth();
+  const h=canvas.height*w/canvas.width;
+
+  pdf.addImage(
+    canvas.toDataURL("image/jpeg",.95),
+    "JPEG",
+    0,0,w,h
+  );
+
+  return{pdf,x};
+}
+
+async function exportInvoicePDF(id){
+  try{
+    const {pdf,x}=await makePDF(id);
+    pdf.save(x.number+".pdf");
+  }catch(e){
+    alert("تعذر إنشاء ملف PDF");
+  }
+}
+
+async function shareInvoicePDF(id){
+  try{
+    const {pdf,x}=await makePDF(id);
+
+    const file=new File(
+      [pdf.output("blob")],
+      x.number+".pdf",
+      {type:"application/pdf"}
+    );
+
+    if(
+      navigator.share &&
+      (
+        !navigator.canShare ||
+        navigator.canShare({files:[file]})
+      )
+    ){
+      try{
+        await navigator.share({
+          title:"فاتورة "+x.number,
+          files:[file]
+        });
+
+        return;
+      }catch(e){
+        if(e.name==="AbortError")return;
+      }
+    }
+
+    pdf.save(x.number+".pdf");
+
+    alert(
+      "تم تنزيل الفاتورة PDF. يمكنك إرسالها عبر واتساب."
+    );
+
+  }catch(e){
+    alert("تعذر مشاركة PDF");
+  }
+}
+
+/* =========================
+   الأصناف
+========================= */
+
+function openItemModal(id=""){
+  $("itemEditId").value=id;
+
+  fillSelect(
+    "itemCompany",
+    db.companies,
+    "اختر الشركة"
+  );
+
+  if(id){
+    const x=db.items.find(r=>r.id===id);
+    if(!x)return;
+
+    $("itemModalTitle").textContent="تعديل الصنف";
+    $("itemName").value=x.name||"";
+    $("itemScientific").value=x.scientific||"";
+    $("itemBarcode").value=x.barcode||"";
+    $("itemCompany").value=x.companyId||"";
+    $("itemCategory").value=x.category||"";
+    $("itemQty").value=Number(x.qty||0);
+    $("itemPrice").value=Number(x.price||0);
+    $("itemCost").value=Number(x.cost||0);
+    $("itemMinQty").value=Number(x.minQty||0);
+    $("itemCommission").value=
+      x.commissionOverride??"";
+    $("itemBuyQty").value=Number(x.buyQty||0);
+    $("itemFreeQty").value=Number(x.freeQty||0);
+
+  }else{
+
+    $("itemModalTitle").textContent="صنف جديد";
+
+    [
+      "itemName","itemScientific","itemBarcode",
+      "itemCategory","itemQty","itemPrice",
+      "itemCost","itemMinQty","itemCommission",
+      "itemBuyQty","itemFreeQty"
+    ].forEach(i=>$(i).value="");
+
+  }
+
+  openModal("itemModal");
+}
+
+function saveItem(){
+  const name=$("itemName").value.trim();
+
+  if(!name){
+    return alert("اكتب اسم الصنف");
+  }
+
+  const data={
+    name,
+    scientific:$("itemScientific").value,
+    barcode:$("itemBarcode").value,
+    companyId:$("itemCompany").value,
+    category:$("itemCategory").value,
+    qty:Number($("itemQty").value||0),
+    price:Number($("itemPrice").value||0),
+    cost:Number($("itemCost").value||0),
+    minQty:Number(
+      $("itemMinQty").value||
+      db.settings.lowStock
+    ),
+    commissionOverride:
+      $("itemCommission").value===""
+      ?null
+      :Number($("itemCommission").value),
+    buyQty:Number($("itemBuyQty").value||0),
+    freeQty:Number($("itemFreeQty").value||0),
+    active:true
+  };
+
+  const id=$("itemEditId").value;
+
+  if(id){
+    const x=db.items.find(r=>r.id===id);
+    Object.assign(x,data);
+  }else{
+    db.items.push({
+      id:uid(),
+      ...data
+    });
+  }
+
+  saveDB();
+  closeModal("itemModal");
+  renderAll();
+
+  toast("تم حفظ الصنف");
+}
+
+function renderItems(){
+  const q=($("itemSearch")?.value||"").toLowerCase();
+
+  const list=db.items.filter(x=>
+    (
+      x.name+" "+
+      (x.scientific||"")+" "+
+      (x.barcode||"")
+    )
+    .toLowerCase()
+    .includes(q)
+  );
+
+  $("itemsTable").innerHTML=
+  list.length
+  ?list.map(x=>{
+
+    const c=
+    db.companies.find(r=>r.id===x.companyId);
+
+    return`
+    <tr>
+      <td>
+        <b>${esc(x.name)}</b>
+        <div>${esc(x.scientific||"")}</div>
+      </td>
+
+      <td>${esc(c?.name||"")}</td>
+      <td>${esc(x.category||"")}</td>
+
+      <td style="
+        ${Number(x.qty)<0
+        ?"color:#d92d20;font-weight:bold"
+        :""}">
+        ${Number(x.qty||0)}
+      </td>
+
+      <td>${money(x.price)}</td>
+      <td>${Number(x.minQty||0)}</td>
+
+      <td>
+        <button class="btn btn-blue"
+        onclick="openItemModal('${x.id}')">
+        ⋮ تعديل
+        </button>
+      </td>
+    </tr>
+    `;
+  }).join("")
+  :`<tr><td colspan="7">لا توجد أصناف</td></tr>`;
+}
+
+/* =========================
+   الشركات
+========================= */
+
+function openCompanyModal(){
+  [
+    "companyName",
+    "companyCommission",
+    "companyBuyQty",
+    "companyFreeQty",
+    "companyNote"
+  ].forEach(i=>$(i).value="");
+
+  openModal("companyModal");
+}
+
+function saveCompany(){
+  const name=$("companyName").value.trim();
+
+  if(!name)return alert("اكتب اسم الشركة");
+
+  db.companies.push({
+    id:uid(),
+    name,
+    commission:Number($("companyCommission").value||0),
+    buyQty:Number($("companyBuyQty").value||0),
+    freeQty:Number($("companyFreeQty").value||0),
+    note:$("companyNote").value,
+    active:true
+  });
+
+  saveDB();
+  closeModal("companyModal");
+  renderAll();
+}
+
+function renderCompanies(){
+  $("companiesCount").textContent=
+  db.companies.length;
+
+  $("companiesActive").textContent=
+  db.companies.filter(x=>x.active!==false).length;
+
+  $("companiesItems").textContent=
+  db.items.length;
+
+  const avg=
+  db.companies.length
+  ?db.companies.reduce(
+    (s,x)=>s+Number(x.commission||0),0
+  )/db.companies.length
+  :0;
+
+  $("companiesAvgCommission").textContent=
+  money(avg)+"%";
+
+  $("companiesTable").innerHTML=
+  db.companies.length
+  ?db.companies.map(x=>`
+    <tr>
+      <td><b>${esc(x.name)}</b></td>
+      <td>${money(x.commission)}%</td>
+
+      <td>
+      ${Number(x.buyQty)>0
+        ?`${x.buyQty}+${x.freeQty||0}`
+        :"—"}
+      </td>
+
+      <td>
+      ${db.items.filter(
+        i=>i.companyId===x.id
+      ).length}
+      </td>
+    </tr>
+  `).join("")
+  :`<tr><td colspan="4">لا توجد شركات</td></tr>`;
+}
+
+/* =========================
+   الصيدليات
+========================= */
+
+function openCustomerModal(){
+  [
+    "customerName",
+    "customerPhone",
+    "customerLicense",
+    "customerAddress"
+  ].forEach(i=>$(i).value="");
+
+  $("customerDiscount").value=0;
+  $("customerLimit").value=0;
+
+  openModal("customerModal");
+}
+
+function saveCustomer(){
+  const name=$("customerName").value.trim();
+
+  if(!name)return alert("اكتب اسم الصيدلية");
+
+  db.customers.push({
+    id:uid(),
+    name,
+    phone:$("customerPhone").value,
+    license:$("customerLicense").value,
+    discount:Number($("customerDiscount").value||0),
+    creditLimit:Number($("customerLimit").value||0),
+    address:$("customerAddress").value,
+    active:true
+  });
+
+  saveDB();
+  closeModal("customerModal");
+  renderAll();
+}
+
+function customerBalance(id){
+  const sales=db.invoices
+    .filter(x=>x.customerId===id)
+    .reduce((s,x)=>s+Number(x.total||0),0);
+
+  const returns=db.returns
+    .filter(x=>x.customerId===id)
+    .reduce((s,x)=>s+Number(x.total||0),0);
+
+  const receipts=db.receipts
+    .filter(x=>x.customerId===id)
+    .reduce((s,x)=>s+Number(x.amount||0),0);
+
+  return sales-returns-receipts;
+}
+
+function renderCustomers(){
+  let debt=0;
+  let over=0;
+
+  $("customersTable").innerHTML=
+  db.customers.length
+  ?db.customers.map(x=>{
+
+    const b=customerBalance(x.id);
+
+    if(b>0)debt+=b;
+
+    if(
+      Number(x.creditLimit)>0 &&
+      b>Number(x.creditLimit)
+    )over++;
+
+    return`
+    <tr>
+      <td><b>${esc(x.name)}</b></td>
+      <td>${esc(x.phone||"")}</td>
+      <td>${esc(x.license||"")}</td>
+      <td>${Number(x.discount||0)}%</td>
+      <td>${money(x.creditLimit)}</td>
+      <td>${money(b)}</td>
+    </tr>
+    `;
+  }).join("")
+  :`<tr><td colspan="6">لا توجد صيدليات</td></tr>`;
+
+  $("customerCount").textContent=db.customers.length;
+  $("customerDebt").textContent=money(debt);
+  $("customerOverLimit").textContent=over;
+}
+
+/* =========================
+   الموردون والمندوبون
+========================= */
+
+function saveSupplier(){
+  const name=$("supplierName").value.trim();
+  if(!name)return;
+
+  db.suppliers.push({
+    id:uid(),
+    name,
+    phone:$("supplierPhone").value
+  });
+
+  $("supplierName").value="";
+  $("supplierPhone").value="";
+
+  saveDB();
+  renderAll();
+}
+
+function renderSuppliers(){
+  $("suppliersTable").innerHTML=
+  db.suppliers.length
+  ?db.suppliers.map(x=>`
+    <tr>
+      <td>${esc(x.name)}</td>
+      <td>${esc(x.phone||"")}</td>
+    </tr>
+  `).join("")
+  :`<tr><td colspan="2">لا يوجد موردون</td></tr>`;
+}
+
+function saveRep(){
+  const name=$("repName").value.trim();
+  if(!name)return;
+
+  db.reps.push({
+    id:uid(),
+    name,
+    phone:$("repPhone").value
+  });
+
+  $("repName").value="";
+  $("repPhone").value="";
+
+  saveDB();
+  renderAll();
+}
+
+function renderReps(){
+  $("repsTable").innerHTML=
+  db.reps.length
+  ?db.reps.map(x=>{
+
+    const c=db.invoices
+      .filter(i=>i.repId===x.id)
+      .reduce(
+        (s,i)=>s+Number(i.commissionTotal||0),
+        0
+      );
+
+    return`
+    <tr>
+      <td>${esc(x.name)}</td>
+      <td>${esc(x.phone||"")}</td>
+      <td>${money(c)}</td>
+    </tr>`;
+  }).join("")
+  :`<tr><td colspan="3">لا يوجد مندوبون</td></tr>`;
+}
+
+/* =========================
+   المشتريات
+========================= */
+
+function savePurchase(){
+  const item=
+  db.items.find(x=>x.id===$("purchaseItem").value);
+
+  const supplier=
+  db.suppliers.find(x=>x.id===$("purchaseSupplier").value);
+
+  const qty=Number($("purchaseQty").value||0);
+  const price=Number($("purchasePrice").value||0);
+
+  if(!item || qty<=0){
+    return alert("اختر الصنف والكمية");
+  }
+
+  item.qty=Number(item.qty||0)+qty;
+
+  db.purchases.unshift({
+    id:uid(),
+    date:today(),
+    itemId:item.id,
+    itemName:item.name,
+    supplierId:supplier?.id||"",
+    supplierName:supplier?.name||"",
+    qty,
+    price,
+    total:qty*price
+  });
+
+  saveDB();
+  renderAll();
+
+  toast("تمت إضافة المشتريات للمخزون");
+}
+
+/* =========================
+   المرتجعات
+========================= */
+
+function addReturnLine(){
+  returnRows.push({
+    itemId:"",
+    qty:1,
+    price:0,
+    reason:""
+  });
+
+  renderReturnLines();
+}
+
+function renderReturnLines(){
+  if(!returnRows.length)addReturnLine();
+
+  $("returnLines").innerHTML=
+  returnRows.map((r,i)=>`
+    <tr>
+
+      <td>
+        <select onchange="
+          returnRows[${i}].itemId=this.value;
+          const it=db.items.find(x=>x.id===this.value);
+          if(it)returnRows[${i}].price=Number(it.price||0);
+          renderReturnLines();
+        ">
+
+          <option value="">اختر الصنف</option>
+
+          ${db.items.map(x=>`
+            <option value="${x.id}"
+            ${x.id===r.itemId?"selected":""}>
+            ${esc(x.name)}
+            </option>
+          `).join("")}
+
+        </select>
+      </td>
+
+      <td>
+        <input type="number"
+        value="${r.qty}"
+        oninput="
+          returnRows[${i}].qty=Number(this.value||0);
+          calculateReturn();
+        ">
+      </td>
+
+      <td>
+        <input type="number"
+        value="${r.price}"
+        oninput="
+          returnRows[${i}].price=Number(this.value||0);
+          calculateReturn();
+        ">
+      </td>
+
+      <td>
+        <input value="${esc(r.reason||"")}"
+        oninput="returnRows[${i}].reason=this.value">
+      </td>
+
+      <td>
+      ${money(Number(r.qty)*Number(r.price))}
+      </td>
+
+      <td>
+        <button class="btn btn-red"
+        onclick="
+          returnRows.splice(${i},1);
+          renderReturnLines();
+        ">
+        حذف
+        </button>
+      </td>
+
+    </tr>
+  `).join("");
+
+  calculateReturn();
+}
+
+function calculateReturn(){
+  const total=returnRows.reduce(
+    (s,x)=>
+    s+Number(x.qty||0)*Number(x.price||0),
+    0
+  );
+
+  $("returnTotal").textContent=money(total);
+}
+
+function returnInvoice(id){
+  const x=db.invoices.find(r=>r.id===id);
+  if(!x)return;
+
+  returnRows=(x.lines||[]).map(l=>({
+    itemId:l.itemId,
+    qty:Number(l.qty||0),
+    price:Number(l.price||0),
+    reason:""
+  }));
+
+  $("returnInvoiceNo").value=x.number;
+  $("returnCustomer").value=x.customerId||"";
+  $("returnRep").value=x.repId||"";
+  $("returnDate").value=today();
+
+  closeModal("invoiceModal");
+  showPage("returns");
+
+  renderReturnLines();
+}
+
+function saveReturn(){
+  const customer=
+  db.customers.find(
+    x=>x.id===$("returnCustomer").value
+  );
+
+  if(!customer){
+    return alert("اختر الصيدلية");
+  }
+
+  const lines=returnRows
+    .filter(x=>x.itemId && Number(x.qty)>0)
+    .map(x=>{
+      const item=db.items.find(i=>i.id===x.itemId);
+
+      item.qty=
+      Number(item.qty||0)+Number(x.qty||0);
+
+      return{
+        ...x,
+        name:item.name,
+        total:Number(x.qty)*Number(x.price)
+      };
+    });
+
+  if(!lines.length){
+    return alert("أضف صنفاً مرتجعاً");
+  }
+
+  const total=lines.reduce(
+    (s,x)=>s+Number(x.total),
+    0
+  );
+
+  db.returns.unshift({
+    id:uid(),
+    number:nextNo("RET",db.returns),
+    date:$("returnDate").value||today(),
+    customerId:customer.id,
+    customerName:customer.name,
+    repId:$("returnRep").value,
+    originalInvoice:$("returnInvoiceNo").value,
+    lines,
+    total,
+    note:$("returnNote").value
+  });
+
+  saveDB();
+
+  returnRows=[];
+  renderAll();
+
+  toast("تم حفظ فاتورة المرتجع");
+}
+
+/* =========================
+   سندات القبض
+========================= */
+
+function saveReceipt(){
+  const customer=
+  db.customers.find(
+    x=>x.id===$("receiptCustomer").value
+  );
+
+  const amount=Number($("receiptAmount").value||0);
+
+  if(!customer || amount<=0){
+    return alert("اختر الصيدلية واكتب المبلغ");
+  }
+
+  const rep=
+  db.reps.find(x=>x.id===$("receiptRep").value);
+
+  db.receipts.unshift({
+    id:uid(),
+    number:nextNo("REC",db.receipts),
+    date:$("receiptDate").value||today(),
+    customerId:customer.id,
+    customerName:customer.name,
+    repId:rep?.id||"",
+    repName:rep?.name||"",
+    amount
+  });
+
+  $("receiptAmount").value="";
+
+  saveDB();
+  renderAll();
+
+  toast("تم حفظ سند القبض");
+}
+
+function renderReceipts(){
+  $("receiptsTable").innerHTML=
+  db.receipts.length
+  ?db.receipts.map(x=>`
+    <tr>
+      <td>${esc(x.number)}</td>
+      <td>${esc(x.date)}</td>
+      <td>${esc(x.customerName)}</td>
+      <td>${esc(x.repName||"")}</td>
+      <td>${money(x.amount)}</td>
+    </tr>
+  `).join("")
+  :`<tr><td colspan="5">لا توجد سندات قبض</td></tr>`;
+}
+
+/* =========================
+   الخزينة
+========================= */
+
+function saveCash(){
+  const amount=Number($("cashAmount").value||0);
+  if(amount<=0)return;
+
+  db.cash.unshift({
+    id:uid(),
+    date:today(),
+    type:$("cashType").value,
+    amount,
+    note:$("cashNote").value
+  });
+
+  $("cashAmount").value="";
+  $("cashNote").value="";
+
+  saveDB();
+  renderAll();
+}
+
+function renderCash(){
+  const balance=db.cash.reduce(
+    (s,x)=>
+    x.type==="income"
+      ?s+Number(x.amount)
+      :s-Number(x.amount),
+    0
+  );
+
+  $("cashBalance").textContent=money(balance);
+}
+
+/* =========================
+   المخزون
+========================= */
+
+function renderWarehouse(){
+  const qty=db.items.reduce(
+    (s,x)=>s+Number(x.qty||0),0
+  );
+
+  const negative=db.items.filter(
+    x=>Number(x.qty)<0
+  ).length;
+
+  const low=db.items.filter(
+    x=>Number(x.qty)<=Number(x.minQty||0)
+  ).length;
+
+  $("warehouseQty").textContent=qty;
+  $("negativeStockCount").textContent=negative;
+  $("lowStockCount").textContent=low;
+
+  $("warehouseTable").innerHTML=
+  db.items.length
+  ?db.items.map(x=>`
+    <tr>
+      <td>${esc(x.name)}</td>
+
+      <td style="
+      ${Number(x.qty)<0
+        ?"color:#d92d20;font-weight:bold"
+        :""}">
+      ${Number(x.qty||0)}
+      </td>
+
+      <td>${Number(x.minQty||0)}</td>
+
+      <td>
+      ${Number(x.qty)<0
+        ?"مخزون سالب"
+        :Number(x.qty)<=Number(x.minQty||0)
+          ?"تحت حد النقص"
+          :"جيد"}
+      </td>
+    </tr>
+  `).join("")
+  :`<tr><td colspan="4">لا توجد أصناف</td></tr>`;
+}
+
+/* =========================
+   الإعدادات
+========================= */
+
+function renderSettings(){
+  const s=db.settings;
+
+  $("settingsWarehouseName").value=s.warehouseName;
+  $("settingsCurrency").value=s.currency;
+  $("settingsPhone").value=s.phone;
+  $("settingsAddress").value=s.address;
+  $("settingsExpiryDays").value=s.expiryDays;
+  $("settingsLowStock").value=s.lowStock;
+  $("settingsPaper").value=s.paper;
+  $("settingsInvoiceHeader").value=s.invoiceHeader;
+  $("settingsInvoiceFooter").value=s.invoiceFooter;
+  $("settingsDollarEnabled").value=s.dollarEnabled?"1":"0";
+  $("settingsDollarRate").value=s.dollarRate;
+  $("settingsNegativeStock").value=s.allowNegativeStock?"1":"0";
+
+  renderLogo();
+  renderPayments();
+
+  document.querySelector(".brand").textContent=
+  s.warehouseName;
+}
+
+function saveSettings(){
+  const s=db.settings;
+
+  s.warehouseName=
+  $("settingsWarehouseName").value.trim()
+  ||"مستودع العالمية لتجارة الأدوية";
+
+  s.currency=
+  $("settingsCurrency").value.trim()||"ل.س";
+
+  s.phone=$("settingsPhone").value;
+  s.address=$("settingsAddress").value;
+
+  s.expiryDays=
+  Number($("settingsExpiryDays").value||90);
+
+  s.lowStock=
+  Number($("settingsLowStock").value||30);
+
+  s.paper=$("settingsPaper").value;
+
+  s.invoiceHeader=
+  $("settingsInvoiceHeader").value;
+
+  s.invoiceFooter=
+  $("settingsInvoiceFooter").value;
+
+  s.dollarEnabled=
+  $("settingsDollarEnabled").value==="1";
+
+  s.dollarRate=
+  Number($("settingsDollarRate").value||0);
+
+  s.allowNegativeStock=
+  $("settingsNegativeStock").value==="1";
+
+  saveDB();
+  renderAll();
+
+  toast("تم حفظ الإعدادات");
+}
+
+function changeLogo(input){
+  const file=input.files?.[0];
+  if(!file)return;
+
+  if(file.size>2*1024*1024){
+    input.value="";
+    return alert("اختر شعاراً أصغر من 2MB");
+  }
+
+  const reader=new FileReader();
+
+  reader.onload=e=>{
+    const img=new Image();
+
+    img.onload=()=>{
+      const canvas=document.createElement("canvas");
+
+      const ratio=Math.min(
+        600/img.width,
+        300/img.height,
+        1
+      );
+
+      canvas.width=Math.round(img.width*ratio);
+      canvas.height=Math.round(img.height*ratio);
+
+      canvas.getContext("2d").drawImage(
+        img,0,0,canvas.width,canvas.height
+      );
+
+      db.settings.logo=
+      canvas.toDataURL("image/jpeg",.85);
+
+      saveDB();
+      renderLogo();
+      toast("تم تغيير شعار المستودع");
+    };
+
+    img.src=e.target.result;
+  };
+
+  reader.readAsDataURL(file);
+}
+
+function renderLogo(){
+  const p=$("logoPreview");
+
+  p.innerHTML=
+  db.settings.logo
+  ?`<img src="${db.settings.logo}">`
+  :"بدون شعار";
+}
+
+function removeLogo(){
+  db.settings.logo="";
+  saveDB();
+  renderLogo();
+}
+
+function renderPayments(){
+  $("paymentMethods").innerHTML=
+  db.settings.paymentMethods.map((x,i)=>`
+    <span style="
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+      background:#e7f7f1;
+      padding:8px 12px;
+      margin:4px;
+      border-radius:20px">
+
+      ${esc(x)}
+
+      <button
+      style="
+        border:0;
+        background:transparent;
+        color:#d92d20"
+      onclick="removePayment(${i})">
+      ×
+      </button>
+
+    </span>
+  `).join("");
+}
+
+function addPaymentMethod(){
+  const e=$("newPaymentMethod");
+  const n=e.value.trim();
+
+  if(!n)return;
+
+  if(!db.settings.paymentMethods.includes(n)){
+    db.settings.paymentMethods.push(n);
+  }
+
+  e.value="";
+  saveDB();
+  renderPayments();
+}
+
+function removePayment(i){
+  if(db.settings.paymentMethods.length<=1){
+    return alert("يجب إبقاء طريقة دفع واحدة على الأقل");
+  }
+
+  db.settings.paymentMethods.splice(i,1);
+
+  saveDB();
+  renderPayments();
+}
+
+/* =========================
+   التقارير ولوحة المعلومات
+========================= */
+
+function renderReports(){
+  const sales=db.invoices.reduce(
+    (s,x)=>s+Number(x.total||0),0
+  );
+
+  const returns=db.returns.reduce(
+    (s,x)=>s+Number(x.total||0),0
+  );
+
+  const receipts=db.receipts.reduce(
+    (s,x)=>s+Number(x.amount||0),0
+  );
+
+  const commissions=db.invoices.reduce(
+    (s,x)=>s+Number(x.commissionTotal||0),0
+  );
+
+  $("reportSales").textContent=money(sales);
+  $("reportReturns").textContent=money(returns);
+  $("reportReceipts").textContent=money(receipts);
+  $("reportCommission").textContent=money(commissions);
+}
+
+function renderDashboard(){
+  $("dashItems").textContent=db.items.length;
+  $("dashCustomers").textContent=db.customers.length;
+  $("dashInvoices").textContent=db.invoices.length;
+
+  $("dashSales").textContent=
+  money(
+    db.invoices.reduce(
+      (s,x)=>s+Number(x.total||0),0
+    )
+  );
+}
+
+/* =========================
+   تعبئة القوائم
+========================= */
+
+function fillAllSelects(){
+  fillSelect(
+    "saleCustomer",
+    db.customers,
+    "اختر الصيدلية"
+  );
+
+  fillSelect(
+    "saleRep",
+    db.reps,
+    "اختر المندوب"
+  );
+
+  fillSelect(
+    "purchaseSupplier",
+    db.suppliers,
+    "اختر المورد"
+  );
+
+  fillSelect(
+    "purchaseItem",
+    db.items,
+    "اختر الصنف"
+  );
+
+  fillSelect(
+    "returnCustomer",
+    db.customers,
+    "اختر الصيدلية"
+  );
+
+  fillSelect(
+    "returnRep",
+    db.reps,
+    "اختر المندوب"
+  );
+
+  fillSelect(
+    "receiptCustomer",
+    db.customers,
+    "اختر الصيدلية"
+  );
+
+  fillSelect(
+    "receiptRep",
+    db.reps,
+    "اختر المندوب"
+  );
+}
+
+function renderAll(){
+  fillAllSelects();
+  renderDashboard();
+  renderSale();
+  renderInvoices();
+  renderItems();
+  renderCompanies();
+  renderCustomers();
+  renderSuppliers();
+  renderReps();
+  renderReceipts();
+  renderCash();
+  renderWarehouse();
+  renderReports();
+  renderSettings();
+  renderReturnLines();
+}
+
+/* =========================
+   التشغيل
+========================= */
+
+$("saleDate").value=today();
+$("returnDate").value=today();
+$("receiptDate").value=today();
+
+[
+  "saleCustomer",
+  "saleRep",
+  "saleDate"
+].forEach(id=>{
+  $(id).addEventListener(
+    "change",
+    saveSaleDraft
+  );
+});
+
+renderAll();
+restoreSaleDraft();
+/* =========================
+   استيراد وتصدير الأصناف Excel + PDF
+========================= */
+
+function exportItemsExcel(){
+
+  if(!db.items.length){
+    return alert("لا توجد أصناف للتصدير");
+  }
+
+  const rows = db.items.map((item,index)=>{
+
+    const company = db.companies.find(c=>c.id===item.companyId);
+
+    return {
+      "الرقم": index+1,
+      "اسم الصنف": item.name || "",
+      "الاسم العلمي": item.scientific || "",
+      "الباركود": item.barcode || "",
+      "الشركة": company?.name || "",
+      "التصنيف": item.category || "",
+      "المخزون": Number(item.qty || 0),
+      "سعر البيع": Number(item.price || 0),
+      "سعر الشراء": Number(item.cost || 0),
+      "حد النقص": Number(item.minQty || 0),
+      "عمولة المندوب %": item.commissionOverride ?? "",
+      "شراء العرض": Number(item.buyQty || 0),
+      "بونص العرض": Number(item.freeQty || 0)
+    };
+  });
+
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+
+  XLSX.utils.book_append_sheet(
+    wb,
+    ws,
+    "الأصناف"
+  );
+
+  XLSX.writeFile(
+    wb,
+    "اصناف-مستودع-العالمية.xlsx"
+  );
+}
+
+
+function importItemsExcel(input){
+
+  const file = input.files?.[0];
+
+  if(!file){
+    return;
+  }
+
+  const reader = new FileReader();
+
+  reader.onload = function(e){
+
+    try{
+
+      const data = new Uint8Array(e.target.result);
+
+      const workbook = XLSX.read(
+        data,
+        {type:"array"}
+      );
+
+      const sheet =
+      workbook.Sheets[workbook.SheetNames[0]];
+
+      const rows =
+      XLSX.utils.sheet_to_json(
+        sheet,
+        {defval:""}
+      );
+
+      if(!rows.length){
+        alert("ملف Excel فارغ");
+        input.value="";
+        return;
+      }
+
+      let added = 0;
+
+      rows.forEach(row=>{
+
+        const name =
+        row["اسم الصنف"] ||
+        row["الصنف"] ||
+        row["name"] ||
+        "";
+
+        if(!String(name).trim()){
+          return;
+        }
+
+        const companyName =
+        String(
+          row["الشركة"] ||
+          row["company"] ||
+          ""
+        ).trim();
+
+        let companyId="";
+
+        if(companyName){
+
+          let company =
+          db.companies.find(
+            c=>String(c.name).trim()===companyName
+          );
+
+          if(!company){
+
+            company={
+              id:uid(),
+              name:companyName,
+              commission:0,
+              buyQty:0,
+              freeQty:0,
+              note:"",
+              active:true
+            };
+
+            db.companies.push(company);
+          }
+
+          companyId=company.id;
+        }
+const offerText=String(
+  row["العرض"] ||
+  row["offer"] ||
+  ""
+).trim();
+
+const offerMatch=offerText.match(/(\d+)\s*\+\s*(\d+)/);
+
+const offerBuy=offerMatch ? Number(offerMatch[1]) : 0;
+const offerFree=offerMatch ? Number(offerMatch[2]) : 0;
+        db.items.push({
+
+          id:uid(),
+
+          name:String(name).trim(),
+
+          scientific:String(
+            row["الاسم العلمي"] ||
+            row["scientific"] ||
+            ""
+          ),
+
+          barcode:String(
+            row["الباركود"] ||
+            row["barcode"] ||
+            ""
+          ),
+
+          companyId,
+
+          category:String(
+            row["التصنيف"] ||
+            row["category"] ||
+            ""
+          ),
+
+          qty:Number(
+            row["المخزون"] ||
+            row["الكمية"] ||
+            row["qty"] ||
+            0
+          ),
+
+          price:Number(
+            row["سعر البيع"] ||
+            row["price"] ||
+            0
+          ),
+
+          cost:Number(
+            row["سعر الشراء"] ||
+            row["cost"] ||
+            0
+          ),
+
+          minQty:Number(
+            row["حد النقص"] ||
+            row["minQty"] ||
+            db.settings.lowStock ||
+            0
+          ),
+
+          commissionOverride:
+          row["عمولة المندوب %"]!=="" &&
+          row["عمولة المندوب %"]!==undefined
+          ?Number(row["عمولة المندوب %"])
+          :null,
+
+          
+buyQty:Number(
+  row["شراء العرض"] ||
+  row["buyQty"] ||
+  offerBuy ||
+  0
+),
+
+          freeQty:Number(
+            row["بونص العرض"] ||
+            row["freeQty"] ||
+     offerFree ||  
+            0
+          ),
+
+          active:true
+        });
+
+        added++;
+      });
+
+      saveDB();
+      renderAll();
+
+      input.value="";
+
+      alert(
+        "تم استيراد " +
+        added +
+        " صنف بنجاح"
+      );
+
+    }catch(err){
+
+      console.error(err);
+
+      alert(
+        "حدث خطأ أثناء قراءة ملف Excel"
+      );
+
+      input.value="";
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+
+async function exportItemsPDF(){
+
+  if(!db.items.length){
+    return alert("لا توجد أصناف للتصدير");
+  }
+
+  const old =
+  document.getElementById("itemsPdfArea");
+
+  if(old){
+    old.remove();
+  }
+
+  const area =
+  document.createElement("div");
+
+  area.id="itemsPdfArea";
+
+  area.style.cssText=`
+    position:fixed;
+    right:-10000px;
+    top:0;
+    width:1100px;
+    background:#fff;
+    color:#111;
+    padding:30px;
+    direction:rtl;
+    font-family:Tahoma,Arial,sans-serif;
+  `;
+
+  area.innerHTML=`
+
+    <div style="
+      text-align:center;
+      margin-bottom:25px
+    ">
+
+      ${
+        db.settings.logo
+        ?`
+          <img
+          src="${db.settings.logo}"
+          style="
+            max-width:120px;
+            max-height:90px;
+            margin-bottom:10px
+          ">
+        `
+        :""
+      }
+
+      <h2 style="margin:5px 0">
+        ${esc(db.settings.warehouseName)}
+      </h2>
+
+      <h3 style="margin:5px 0">
+        تقرير الأصناف والمخزون
+      </h3>
+
+      <div>
+        التاريخ:
+        ${today()}
+      </div>
+
+    </div>
+
+    <table style="
+      width:100%;
+      border-collapse:collapse;
+      font-size:16px
+    ">
+
+      <thead>
+        <tr>
+          <th style="border:1px solid #555;padding:8px">
+            الصنف
+          </th>
+
+          <th style="border:1px solid #555;padding:8px">
+            الشركة
+          </th>
+
+          <th style="border:1px solid #555;padding:8px">
+            التصنيف
+          </th>
+
+          <th style="border:1px solid #555;padding:8px">
+            المخزون
+          </th>
+
+          <th style="border:1px solid #555;padding:8px">
+            سعر البيع
+          </th>
+
+          <th style="border:1px solid #555;padding:8px">
+            حد النقص
+          </th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        ${
+          db.items.map(item=>{
+
+            const company =
+            db.companies.find(
+              c=>c.id===item.companyId
+            );
+
+            return `
+              <tr>
+
+                <td style="border:1px solid #777;padding:8px">
+                  ${esc(item.name || "")}
+                </td>
+
+                <td style="border:1px solid #777;padding:8px">
+                  ${esc(company?.name || "")}
+                </td>
+
+                <td style="border:1px solid #777;padding:8px">
+                  ${esc(item.category || "")}
+                </td>
+
+                <td style="border:1px solid #777;padding:8px">
+                  ${Number(item.qty || 0)}
+                </td>
+
+                <td style="border:1px solid #777;padding:8px">
+                  ${money(item.price)}
+                </td>
+
+                <td style="border:1px solid #777;padding:8px">
+                  ${Number(item.minQty || 0)}
+                </td>
+
+              </tr>
+            `;
+          }).join("")
+        }
+
+      </tbody>
+
+    </table>
+  `;
+
+  document.body.appendChild(area);
+
+  try{
+
+    const canvas =
+    await html2canvas(
+      area,
+      {
+        scale:2,
+        backgroundColor:"#ffffff"
+      }
+    );
+
+    const {jsPDF}=window.jspdf;
+
+    const pdf=
+    new jsPDF(
+      "p",
+      "mm",
+      "a4"
+    );
+
+    const pageWidth=
+    pdf.internal.pageSize.getWidth();
+
+    const pageHeight=
+    pdf.internal.pageSize.getHeight();
+
+    const imgWidth=
+    pageWidth-10;
+
+    const imgHeight=
+    canvas.height *
+    imgWidth /
+    canvas.width;
+
+    const img=
+    canvas.toDataURL(
+      "image/jpeg",
+      0.95
+    );
+
+    let position=5;
+    let remaining=imgHeight;
+
+    pdf.addImage(
+      img,
+      "JPEG",
+      5,
+      position,
+      imgWidth,
+      imgHeight
+    );
+
+    remaining -= pageHeight;
+
+    while(remaining>0){
+
+      position =
+      remaining-imgHeight+5;
+
+      pdf.addPage();
+
+      pdf.addImage(
+        img,
+        "JPEG",
+        5,
+        position,
+        imgWidth,
+        imgHeight
+      );
+
+      remaining -= pageHeight;
+    }
+
+    pdf.save(
+      "تقرير-اصناف-مستودع-العالمية.pdf"
+    );
+
+  }catch(err){
+
+    console.error(err);
+
+    alert(
+      "تعذر إنشاء ملف PDF"
+    );
+
+  }finally{
+
+    area.remove();
+  }
+}
+  /* ===== تشغيل التطبيق كتطبيق PWA ===== */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker
+      .register("./sw.js")
+      .then(function (registration) {
+        console.log("Service Worker يعمل بنجاح:", registration.scope);
+      })
+      .catch(function (error) {
+        console.log("تعذر تشغيل Service Worker:", error);
+      });
+  });
+}
+async function importCustomersExcel(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+        const data = await file.arrayBuffer();
+        const workbook = XLSX.read(data);
+
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+        if (!rows.length) {
+            alert("ملف Excel فارغ");
+            return;
+        }
+
+        let imported = 0;
+
+        rows.forEach(row => {
+            const name =
+                row["الصيدلية"] ||
+                row["اسم الصيدلية"] ||
+                row["الاسم"] ||
+                row["name"] ||
+                "";
+
+            const phone =
+                row["الهاتف"] ||
+                row["رقم الهاتف"] ||
+                row["phone"] ||
+                "";
+
+            const discount = Number(
+                row["الخصم"] ||
+                row["نسبة الخصم"] ||
+                row["discount"] ||
+                0
+            );
+
+            const creditLimit = Number(
+                row["حد الدين"] ||
+                row["سقف الدين"] ||
+                row["creditLimit"] ||
+                0
+            );
+
+            if (!name) return;
+
+            customers.push({
+                id: Date.now() + Math.random(),
+                name: String(name).trim(),
+                phone: String(phone).trim(),
+                discount: discount || 0,
+                creditLimit: creditLimit || 0
+            });
+
+            imported++;
+        });
+
+        saveData();
+        renderCustomers();
+
+        alert("تم استيراد " + imported + " صيدلية بنجاح");
+
+    } catch (error) {
+        console.error(error);
+        alert("حدث خطأ أثناء استيراد ملف Excel");
+    }
+
+    event.target.value = "";
+} </script>
+<style>
+/* تثبيت فاتورة البيع داخل شاشة الهاتف */
+@media(max-width:768px){
+  #sale .table-wrap{
+    width:100%!important;
+    max-width:100%!important;
+    overflow-x:hidden!important;
+  }
+
+  #sale table{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    table-layout:fixed!important;
+  }
+
+  #sale th,
+  #sale td{
+    padding:4px 2px!important;
+    font-size:11px!important;
+  }
+
+  #sale input,
+  #sale select{
+    width:100%!important;
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+}
+</style>
+
+<script>
+/* ===== استيراد الصيدليات Excel + PDF ===== */
+
+function normalizeImportedDigits(v=""){
+  return String(v)
+    .replace(/[٠-٩]/g,d=>"0123456789"["٠١٢٣٤٥٦٧٨٩".indexOf(d)])
+    .replace(/[۰-۹]/g,d=>"0123456789"["۰۱۲۳۴۵۶۷۸۹".indexOf(d)]);
+}
+
+function importedNumber(v){
+  const n = Number(
+    normalizeImportedDigits(v)
+      .replace(/,/g,"")
+      .replace(/[^\d.-]/g,"")
+  );
+  return isNaN(n) ? 0 : n;
+}
+
+function importedCustomerByName(name){
+  const n=String(name||"").trim().toLowerCase();
+  return db.customers.find(x=>
+    String(x.name||"").trim().toLowerCase()===n
+  );
+}
+
+function saveImportedCustomer(data){
+  if(!data.name)return false;
+
+  let c=importedCustomerByName(data.name);
+
+  if(c){
+    c.phone=data.phone || c.phone || "";
+    c.license=data.license || c.license || "";
+    c.address=data.address || c.address || "";
+    c.discount=Number(data.discount||c.discount||0);
+    c.creditLimit=Number(data.creditLimit||c.creditLimit||0);
+
+    if(data.openingBalance!==undefined)
+      c.openingBalance=Number(data.openingBalance||0);
+
+    return false;
+  }
+
+  db.customers.push({
+    id:uid(),
+    name:String(data.name).trim(),
+    phone:String(data.phone||"").trim(),
+    license:String(data.license||"").trim(),
+    address:String(data.address||"").trim(),
+    discount:Number(data.discount||0),
+    creditLimit:Number(data.creditLimit||0),
+    openingBalance:Number(data.openingBalance||0),
+    active:true
+  });
+
+  return true;
+}
+
+
+/* تصحيح حساب رصيد الصيدلية */
+customerBalance=function(id){
+
+  const customer=db.customers.find(x=>x.id===id);
+
+  const openingBalance=
+    Number(customer?.openingBalance||0);
+
+  const sales=db.invoices
+    .filter(x=>x.customerId===id)
+    .reduce((s,x)=>s+Number(x.total||0),0);
+
+  const returns=db.returns
+    .filter(x=>x.customerId===id)
+    .reduce((s,x)=>s+Number(x.total||0),0);
+
+  const receipts=db.receipts
+    .filter(x=>x.customerId===id)
+    .reduce((s,x)=>s+Number(x.amount||0),0);
+
+  return openingBalance+sales-returns-receipts;
+};
+
+
+/* تصحيح استيراد Excel */
+importCustomersExcel=async function(event){
+
+  const file=event.target.files[0];
+  if(!file)return;
+
+  try{
+
+    const data=await file.arrayBuffer();
+    const workbook=XLSX.read(data);
+
+    const sheet=
+      workbook.Sheets[workbook.SheetNames[0]];
+
+    const rows=
+      XLSX.utils.sheet_to_json(sheet,{defval:""});
+
+    if(!rows.length){
+      alert("ملف Excel فارغ");
+      return;
+    }
+
+    let imported=0;
+    let updated=0;
+
+    rows.forEach(row=>{
+
+      const name=
+        row["الصيدلية"] ||
+        row["اسم الصيدلية"] ||
+        row["الاسم"] ||
+        row["name"] || "";
+
+      if(!String(name).trim())return;
+
+      const isNew=saveImportedCustomer({
+
+        name:name,
+
+        phone:
+          row["الهاتف"] ||
+          row["رقم الهاتف"] ||
+          row["phone"] || "",
+
+        license:
+          row["الترخيص"] ||
+          row["رقم الترخيص"] ||
+          row["license"] || "",
+
+        discount:importedNumber(
+          row["الخصم"] ||
+          row["نسبة الخصم"] ||
+          row["discount"] || 0
+        ),
+
+        creditLimit:importedNumber(
+          row["حد الدين"] ||
+          row["سقف الدين"] ||
+          row["creditLimit"] || 0
+        ),
+
+        address:
+          row["العنوان"] ||
+          row["address"] || "",
+
+        openingBalance:importedNumber(
+          row["الرصيد"] ||
+          row["الرصيد الافتتاحي"] ||
+          row["openingBalance"] || 0
+        )
+      });
+
+      if(isNew) imported++;
+      else updated++;
+    });
+
+    saveDB();
+    renderAll();
+
+    alert(
+      "تم الاستيراد بنجاح\n"+
+      "جديد: "+imported+
+      "\nتم تحديثه: "+updated
+    );
+
+  }catch(error){
+    console.error(error);
+    alert("حدث خطأ أثناء استيراد ملف Excel");
+  }
+
+  event.target.value="";
+};
+
+
+/* إضافة زر استيراد PDF */
+(function(){
+
+  const excelInput=
+    document.getElementById("customersExcelFile");
+
+  if(!excelInput)return;
+
+  const box=excelInput.parentElement;
+
+  if(document.getElementById("customersPdfFile"))
+    return;
+
+  const btn=document.createElement("button");
+  btn.className="btn btn-red";
+  btn.type="button";
+  btn.innerHTML="📄 استيراد من PDF";
+
+  const input=document.createElement("input");
+  input.type="file";
+  input.id="customersPdfFile";
+  input.accept="application/pdf,.pdf";
+  input.style.display="none";
+
+  btn.onclick=()=>input.click();
+  input.onchange=importCustomersPDF;
+
+  box.appendChild(btn);
+  box.appendChild(input);
+
+})();
+
+
+async function loadPdfLibrary(){
+
+  if(window.pdfjsLib)return;
+
+  await new Promise((resolve,reject)=>{
+
+    const s=document.createElement("script");
+
+    s.src=
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+
+    s.onload=resolve;
+    s.onerror=reject;
+
+    document.head.appendChild(s);
+  });
+
+  pdfjsLib.GlobalWorkerOptions.workerSrc=
+  "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+}
+
+
+async function importCustomersPDF(event){
+
+  const file=event.target.files[0];
+  if(!file)return;
+
+  try{
+
+    await loadPdfLibrary();
+
+    const bytes=
+      new Uint8Array(await file.arrayBuffer());
+
+    const pdf=
+      await pdfjsLib.getDocument({data:bytes}).promise;
+
+    let imported=0;
+    let updated=0;
+
+    for(let p=1;p<=pdf.numPages;p++){
+
+      const page=await pdf.getPage(p);
+      const content=await page.getTextContent();
+
+      const items=content.items
+        .filter(x=>String(x.str||"").trim())
+        .map(x=>({
+          text:String(x.str).trim(),
+          x:x.transform[4],
+          y:x.transform[5]
+        }));
+
+      const groups=[];
+
+      items.forEach(it=>{
+
+        let g=groups.find(r=>
+          Math.abs(r.y-it.y)<3
+        );
+
+        if(!g){
+          g={y:it.y,items:[]};
+          groups.push(g);
+        }
+
+        g.items.push(it);
+      });
+
+      groups.sort((a,b)=>b.y-a.y);
+
+      let header=null;
+
+      for(const g of groups){
+
+        const rowText=
+          g.items.map(x=>x.text).join(" ");
+
+        if(
+          rowText.includes("الصيدلية") &&
+          rowText.includes("الهاتف") &&
+          rowText.includes("الرصيد")
+        ){
+          header=g;
+          break;
+        }
+      }
+
+      if(!header)continue;
+
+      const hName=
+        header.items.find(x=>x.text.includes("الصيدلية"));
+
+      const hPhone=
+        header.items.find(x=>x.text.includes("الهاتف"));
+
+      const hBalance=
+        header.items.find(x=>x.text.includes("الرصيد"));
+
+      if(!hName || !hPhone || !hBalance)continue;
+
+      groups
+      .filter(g=>g.y<header.y-3)
+      .forEach(g=>{
+
+        let name="";
+        let phone="";
+        let balance="";
+
+        g.items.forEach(it=>{
+
+          const dName=Math.abs(it.x-hName.x);
+          const dPhone=Math.abs(it.x-hPhone.x);
+          const dBalance=Math.abs(it.x-hBalance.x);
+
+          if(dName<=dPhone && dName<=dBalance)
+            name+=(name?" ":"")+it.text;
+
+          else if(dPhone<=dBalance)
+            phone+=(phone?" ":"")+it.text;
+
+          else
+            balance+=(balance?" ":"")+it.text;
+        });
+
+        name=name.trim();
+
+        if(
+          !name ||
+          name.includes("الصيدلية") ||
+          name.includes("كشف أرصدة")
+        ) return;
+
+        const isNew=saveImportedCustomer({
+          name:name,
+          phone:phone.trim(),
+          openingBalance:importedNumber(balance)
+        });
+
+        if(isNew)imported++;
+        else updated++;
+      });
+    }
+
+    saveDB();
+    renderAll();
+
+    alert(
+      "تم استيراد PDF بنجاح\n"+
+      "جديد: "+imported+
+      "\nتم تحديثه: "+updated
+    );
+
+  }catch(error){
+
+    console.error(error);
+
+    alert(
+      "تعذر قراءة ملف PDF.\n"+
+      "إذا كان PDF عبارة عن صورة ممسوحة ضوئياً فقد يحتاج OCR."
+    );
+  }
+
+  event.target.value="";
+}
+
+</script>
+  <script>
+/* =========================================================
+   إضافة OCR لقراءة PDF المصوّر
+   إضافة فقط - لا تحذف أي كود سابق
+   ========================================================= */
+
+async function loadTesseractOCR(){
+  if(window.Tesseract) return;
+
+  await new Promise((resolve,reject)=>{
+    const s=document.createElement("script");
+    s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";
+    s.onload=resolve;
+    s.onerror=()=>reject(new Error("تعذر تحميل مكتبة OCR"));
+    document.head.appendChild(s);
+  });
+}
+
+function ocrNormalizeDigits(value){
+  return String(value || "")
+    .replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d))
+    .replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d));
+}
+
+function ocrCleanBalance(value){
+  let s=ocrNormalizeDigits(value)
+    .replace(/[^\d,.-]/g,"")
+    .replace(/,/g,"");
+
+  const n=parseFloat(s);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function ocrCleanPhone(value){
+  let s=ocrNormalizeDigits(value)
+    .replace(/[^\d]/g,"");
+
+  if(s.length < 7) return "";
+  return s;
+}
+
+function ocrCleanName(value){
+  return String(value || "")
+    .replace(/\s+/g," ")
+    .replace(/[|]/g,"")
+    .trim();
+}
+
+function ocrCreateStatus(){
+  let box=document.getElementById("ocrStatusBox");
+
+  if(!box){
+    box=document.createElement("div");
+    box.id="ocrStatusBox";
+
+    box.style.position="fixed";
+    box.style.left="12px";
+    box.style.right="12px";
+    box.style.bottom="18px";
+    box.style.zIndex="999999";
+    box.style.background="#0f172a";
+    box.style.color="#fff";
+    box.style.padding="14px";
+    box.style.borderRadius="12px";
+    box.style.fontSize="14px";
+    box.style.textAlign="center";
+    box.style.boxShadow="0 5px 25px rgba(0,0,0,.35)";
+
+    document.body.appendChild(box);
+  }
+
+  return box;
+}
+
+function ocrStatus(text){
+  const box=ocrCreateStatus();
+  box.innerHTML=text;
+}
+
+function ocrHideStatus(){
+  const box=document.getElementById("ocrStatusBox");
+  if(box) box.remove();
+}
+
+/* تحويل TSV إلى كلمات مع إحداثيات */
+function ocrWordsFromTSV(tsv){
+  const words=[];
+
+  String(tsv || "")
+    .split(/\r?\n/)
+    .slice(1)
+    .forEach(line=>{
+
+      const p=line.split("\t");
+      if(p.length < 12) return;
+
+      const level=Number(p[0]);
+      if(level !== 5) return;
+
+      const text=(p.slice(11).join("\t") || "").trim();
+      if(!text) return;
+
+      const left=Number(p[6]) || 0;
+      const top=Number(p[7]) || 0;
+      const width=Number(p[8]) || 0;
+      const height=Number(p[9]) || 0;
+      const conf=Number(p[10]) || 0;
+
+      if(conf < 15) return;
+
+      words.push({
+        text,
+        left,
+        top,
+        width,
+        height,
+        cx:left+(width/2),
+        cy:top+(height/2)
+      });
+    });
+
+  return words;
+}
+
+/* تجميع الكلمات حسب صفوف الجدول */
+function ocrGroupRows(words,canvasHeight){
+
+  const sorted=[...words].sort((a,b)=>a.cy-b.cy);
+
+  const rows=[];
+  const tolerance=Math.max(10,canvasHeight*0.007);
+
+  sorted.forEach(w=>{
+
+    let row=null;
+    let best=Infinity;
+
+    for(const r of rows){
+      const d=Math.abs(r.cy-w.cy);
+
+      if(d<tolerance && d<best){
+        best=d;
+        row=r;
+      }
+    }
+
+    if(!row){
+      row={
+        cy:w.cy,
+        words:[]
+      };
+
+      rows.push(row);
+    }
+
+    row.words.push(w);
+
+    row.cy=
+      row.words.reduce((s,x)=>s+x.cy,0) /
+      row.words.length;
+  });
+
+  return rows.sort((a,b)=>a.cy-b.cy);
+}
+
+/* قراءة صف واحد من جدول الصيدليات */
+function ocrParseTableRow(row,canvasWidth){
+
+  const nameWords=[];
+  const phoneWords=[];
+  const balanceWords=[];
+
+  row.words.forEach(w=>{
+
+    const x=w.cx/canvasWidth;
+
+    /*
+      توزيع الأعمدة حسب ملف كشف الصيدليات:
+      اليمين = الصيدلية
+      الوسط = الهاتف
+      اليسار = الرصيد
+    */
+
+    if(x >= 0.43){
+      nameWords.push(w);
+    }
+    else if(x >= 0.27){
+      phoneWords.push(w);
+    }
+    else if(x >= 0.03){
+      balanceWords.push(w);
+    }
+
+  });
+
+  /* الاسم عربي لذلك نرتب من اليمين لليسار */
+  nameWords.sort((a,b)=>b.left-a.left);
+
+  phoneWords.sort((a,b)=>a.left-b.left);
+  balanceWords.sort((a,b)=>a.left-b.left);
+
+  let name=ocrCleanName(
+    nameWords.map(x=>x.text).join(" ")
+  );
+
+  let phone=ocrCleanPhone(
+    phoneWords.map(x=>x.text).join("")
+  );
+
+  let balanceText=ocrNormalizeDigits(
+    balanceWords.map(x=>x.text).join("")
+  );
+
+  let balance=ocrCleanBalance(balanceText);
+
+  /* استبعاد رؤوس الجدول والإجمالي */
+  if(
+    !name ||
+    name.includes("الصيدلية") ||
+    name.includes("كشف أرصدة") ||
+    name.includes("الإجمالي") ||
+    name.includes("المستحق")
+  ){
+    return null;
+  }
+
+  /* يجب أن يوجد رقم رصيد */
+  if(!/\d/.test(ocrNormalizeDigits(balanceText))){
+    return null;
+  }
+
+  return {
+    name,
+    phone,
+    balance
+  };
+}
+
+
+/* =========================================================
+   دالة الاستيراد الجديدة
+   ========================================================= */
+
+window.importCustomersPDF_OCR = async function(event){
+
+  const file=event.target.files?.[0];
+  if(!file) return;
+
+  let worker=null;
+
+  try{
+
+    ocrStatus(
+      "جاري تجهيز قراءة PDF...<br>"+
+      "<small>يرجى عدم إغلاق الصفحة</small>"
+    );
+
+    /* pdf.js موجود مسبقًا، وإذا لم يكن موجودًا يتم تحميله */
+    if(typeof loadPdfLibrary==="function"){
+      await loadPdfLibrary();
+    }
+
+    if(!window.pdfjsLib){
+      throw new Error("مكتبة PDF غير متوفرة");
+    }
+
+    await loadTesseractOCR();
+
+    ocrStatus(
+      "جاري تشغيل OCR العربي...<br>"+
+      "<small>أول تشغيل قد يحتاج بعض الوقت</small>"
+    );
+
+    worker=await Tesseract.createWorker(
+      ["ara","eng"],
+      1,
+      {
+        logger:m=>{
+
+          if(m.status==="recognizing text"){
+
+            const percent=
+              Math.round((m.progress || 0)*100);
+
+            const box=
+              document.getElementById("ocrStatusBox");
+
+            if(box){
+              const page=
+                box.getAttribute("data-page") || "";
+
+              box.innerHTML=
+                "🔎 قراءة الصفحة "+page+
+                "<br>تقدم القراءة: "+percent+"%";
+            }
+          }
+        }
+      }
+    );
+
+    const bytes=
+      new Uint8Array(
+        await file.arrayBuffer()
+      );
+
+    const pdf=
+      await pdfjsLib
+        .getDocument({data:bytes})
+        .promise;
+
+    let imported=0;
+    let updated=0;
+    let ignored=0;
+
+    for(
+      let pageNumber=1;
+      pageNumber<=pdf.numPages;
+      pageNumber++
+    ){
+
+      const status=
+        ocrCreateStatus();
+
+      status.setAttribute(
+        "data-page",
+        pageNumber+" من "+pdf.numPages
+      );
+
+      ocrStatus(
+        "📄 تجهيز الصفحة "+
+        pageNumber+
+        " من "+
+        pdf.numPages+
+        "..."
+      );
+
+      status.setAttribute(
+        "data-page",
+        pageNumber+" من "+pdf.numPages
+      );
+
+      const page=
+        await pdf.getPage(pageNumber);
+
+      /*
+        دقة 2 مناسبة لزيادة دقة OCR
+      */
+      const viewport=
+        page.getViewport({scale:2});
+
+      const canvas=
+        document.createElement("canvas");
+
+      canvas.width=
+        Math.floor(viewport.width);
+
+      canvas.height=
+        Math.floor(viewport.height);
+
+      const ctx=
+        canvas.getContext(
+          "2d",
+          {
+            willReadFrequently:true
+          }
+        );
+
+      await page.render({
+        canvasContext:ctx,
+        viewport
+      }).promise;
+
+      ocrStatus(
+        "🔎 قراءة الصفحة "+
+        pageNumber+
+        " من "+
+        pdf.numPages+
+        " بواسطة OCR..."
+      );
+
+      const box=
+        document.getElementById("ocrStatusBox");
+
+      if(box){
+        box.setAttribute(
+          "data-page",
+          pageNumber+" من "+pdf.numPages
+        );
+      }
+
+      /*
+        نطلب TSV لأنه يحتوي مواقع الكلمات
+        حتى نعرف عمود الصيدلية والهاتف والرصيد
+      */
+      const result=
+        await worker.recognize(
+          canvas,
+          {},
+          {
+            text:true,
+            tsv:true
+          }
+        );
+
+      const words=
+        ocrWordsFromTSV(
+          result.data.tsv
+        );
+
+      const rows=
+        ocrGroupRows(
+          words,
+          canvas.height
+        );
+
+      rows.forEach(row=>{
+
+        const data=
+          ocrParseTableRow(
+            row,
+            canvas.width
+          );
+
+        if(!data){
+          ignored++;
+          return;
+        }
+
+        try{
+
+          /*
+            نستخدم دالة البرنامج الموجودة مسبقًا
+            لإضافة أو تحديث الصيدلية
+          */
+          if(
+            typeof saveImportedCustomer
+            ==="function"
+          ){
+
+            const isNew=
+              saveImportedCustomer({
+                name:data.name,
+                phone:data.phone,
+                openingBalance:data.balance
+              });
+
+            if(isNew){
+              imported++;
+            }else{
+              updated++;
+            }
+
+          }else{
+
+            throw new Error(
+              "دالة حفظ الصيدليات غير موجودة"
+            );
+
+          }
+
+        }catch(e){
+
+          console.warn(
+            "تعذر حفظ صف:",
+            data,
+            e
+          );
+
+        }
+
+      });
+
+      /*
+        تحرير الذاكرة بعد كل صفحة
+      */
+      canvas.width=1;
+      canvas.height=1;
+
+      await new Promise(
+        r=>setTimeout(r,100)
+      );
+    }
+
+    if(worker){
+      await worker.terminate();
+      worker=null;
+    }
+
+    saveDB();
+    renderAll();
+
+    ocrHideStatus();
+
+    alert(
+      "✅ تم الانتهاء من قراءة PDF بواسطة OCR\n\n"+
+      "صيدليات جديدة: "+imported+"\n"+
+      "تم تحديثها: "+updated+"\n\n"+
+      "يرجى مراجعة الأسماء والأرصدة بعد الاستيراد."
+    );
+
+  }catch(error){
+
+    console.error(
+      "PDF OCR ERROR:",
+      error
+    );
+
+    if(worker){
+      try{
+        await worker.terminate();
+      }catch(e){}
+    }
+
+    ocrHideStatus();
+
+    alert(
+      "❌ حدث خطأ أثناء قراءة PDF بواسطة OCR.\n\n"+
+      (error.message || error)
+    );
+
+  }
+
+  event.target.value="";
+};
+
+
+/* =========================================================
+   ربط زر PDF الموجود سابقًا بالدالة الجديدة
+   بدون حذف الكود القديم
+   ========================================================= */
+
+function activateNewPdfOCR(){
+
+  const input=
+    document.getElementById(
+      "customersPdfFile"
+    );
+
+  if(input){
+
+    input.onchange=
+      window.importCustomersPDF_OCR;
+
+    console.log(
+      "PDF OCR جاهز للعمل"
+    );
+
+    return true;
+  }
+
+  return false;
+}
+
+if(!activateNewPdfOCR()){
+
+  setTimeout(
+    activateNewPdfOCR,
+    1000
+  );
+
+  setTimeout(
+    activateNewPdfOCR,
+    2500
+  );
+}
+
+  </script>
+  <script>
+/* ==========================================
+   بحث الصيدليات مثل Google
+   إضافة فقط - بدون حذف أي كود
+========================================== */
+
+(function(){
+
+  /* تنظيف النص لتحسين البحث العربي */
+  function customerSearchNormalize(text){
+    return String(text || "")
+      .toLowerCase()
+      .replace(/[أإآ]/g,"ا")
+      .replace(/ى/g,"ي")
+      .replace(/ؤ/g,"و")
+      .replace(/ئ/g,"ي")
+      .replace(/[ًٌٍَُِّْـ]/g,"")
+      .replace(/\s+/g," ")
+      .trim();
+  }
+
+  /* إضافة مربع البحث مرة واحدة */
+  function addCustomerSearchBox(){
+
+    if(document.getElementById("customerGoogleSearch")){
+      return;
+    }
+
+    const page = document.getElementById("customers");
+    if(!page) return;
+
+    const actions = page.querySelector(".actions");
+    if(!actions) return;
+
+    const searchCard = document.createElement("div");
+
+    searchCard.id = "customerSearchCard";
+
+    searchCard.innerHTML = `
+      <div style="
+        background:#fff;
+        border-radius:18px;
+        padding:14px;
+        margin:15px 0;
+        box-shadow:0 2px 12px rgba(0,0,0,.06);
+      ">
+
+        <div style="
+          display:flex;
+          align-items:center;
+          gap:10px;
+          border:2px solid #d7dce3;
+          border-radius:15px;
+          padding:4px 12px;
+          background:#fff;
+        ">
+
+          <span style="
+            font-size:25px;
+            flex:0 0 auto;
+          ">🔍</span>
+
+          <input
+            id="customerGoogleSearch"
+            type="search"
+            autocomplete="off"
+            placeholder="ابحث عن الصيدلية بالاسم أو الهاتف..."
+            style="
+              width:100%;
+              border:none;
+              outline:none;
+              padding:14px 4px;
+              font-size:16px;
+              background:transparent;
+              min-width:0;
+            "
+          >
+
+        </div>
+
+        <div
+          id="customerSearchInfo"
+          style="
+            text-align:center;
+            color:#64748b;
+            font-size:13px;
+            margin-top:8px;
+          "
+        >
+          اكتب اسم الصيدلية أو رقم الهاتف
+        </div>
+
+      </div>
+    `;
+
+    actions.insertAdjacentElement("afterend",searchCard);
+
+    const input =
+      document.getElementById("customerGoogleSearch");
+
+    input.addEventListener("input",function(){
+      renderCustomers();
+    });
+
+    /* منع Enter من عمل أي شيء غير البحث */
+    input.addEventListener("keydown",function(e){
+      if(e.key === "Enter"){
+        e.preventDefault();
+      }
+    });
+  }
+
+
+  /* ==========================================
+     استبدال عرض القائمة فقط
+     البيانات الأصلية تبقى كما هي
+  ========================================== */
+
+  renderCustomers = function(){
+
+    addCustomerSearchBox();
+
+    let debt = 0;
+    let over = 0;
+
+    /* حساب الإحصائيات لكل الصيدليات */
+    db.customers.forEach(x=>{
+
+      const b = customerBalance(x.id);
+
+      if(b > 0){
+        debt += b;
+      }
+
+      if(
+        Number(x.creditLimit) > 0 &&
+        b > Number(x.creditLimit)
+      ){
+        over++;
+      }
+
+    });
+
+
+    const input =
+      document.getElementById("customerGoogleSearch");
+
+    const info =
+      document.getElementById("customerSearchInfo");
+
+    const table =
+      document.getElementById("customersTable");
+
+
+    /* إذا مربع البحث لم يظهر بعد */
+    if(!input || !table){
+      return;
+    }
+
+
+    const query =
+      customerSearchNormalize(input.value);
+
+
+    /* الإحصائيات تبقى ظاهرة */
+    document.getElementById("customerCount").textContent =
+      db.customers.length;
+
+    document.getElementById("customerDebt").textContent =
+      money(debt);
+
+    document.getElementById("customerOverLimit").textContent =
+      over;
+
+
+    /* =====================================
+       لا تعرض أي صيدلية عند فتح الصفحة
+    ===================================== */
+
+    if(!query){
+
+      table.innerHTML = `
+        <tr>
+          <td colspan="6"
+              style="
+                text-align:center;
+                padding:35px 10px;
+                color:#64748b;
+                font-size:15px;
+              ">
+            🔍 ابحث عن صيدلية لعرض النتائج
+          </td>
+        </tr>
+      `;
+
+      if(info){
+        info.textContent =
+          "اكتب اسم الصيدلية أو رقم الهاتف";
+      }
+
+      return;
+    }
+
+
+    /* تقسيم كلمات البحث مثل Google */
+    const searchWords =
+      query.split(" ").filter(Boolean);
+
+
+    const results =
+      db.customers.filter(x=>{
+
+        const searchText =
+          customerSearchNormalize(
+            [
+              x.name,
+              x.phone,
+              x.license,
+              x.address
+            ].join(" ")
+          );
+
+        /*
+          إذا كتبت أكثر من كلمة،
+          يجب أن توجد جميع الكلمات في البيانات
+        */
+        return searchWords.every(word=>
+          searchText.includes(word)
+        );
+
+      });
+
+
+    /* لا توجد نتيجة */
+    if(!results.length){
+
+      table.innerHTML = `
+        <tr>
+          <td colspan="6"
+              style="
+                text-align:center;
+                padding:35px 10px;
+                color:#64748b;
+              ">
+            لا توجد صيدلية مطابقة لـ
+            <b>${esc(input.value)}</b>
+          </td>
+        </tr>
+      `;
+
+      if(info){
+        info.textContent =
+          "لم يتم العثور على نتائج";
+      }
+
+      return;
+    }
+
+
+    /* عرض النتائج فقط */
+    table.innerHTML =
+      results.map(x=>{
+
+        const b =
+          customerBalance(x.id);
+
+        return `
+          <tr>
+
+            <td>
+              <b>${esc(x.name || "")}</b>
+            </td>
+
+            <td>
+              ${esc(x.phone || "")}
+            </td>
+
+            <td>
+              ${esc(x.license || "")}
+            </td>
+
+            <td>
+              ${Number(x.discount || 0)}%
+            </td>
+
+            <td>
+              ${money(x.creditLimit)}
+            </td>
+
+            <td>
+              <b>${money(b)}</b>
+            </td>
+
+          </tr>
+        `;
+
+      }).join("");
+
+
+    if(info){
+
+      info.textContent =
+        "تم العثور على " +
+        results.length +
+        " صيدلية";
+
+    }
+
+  };
+
+
+  /* تشغيل الإضافة */
+  function startCustomerGoogleSearch(){
+
+    addCustomerSearchBox();
+
+    if(
+      document.getElementById("customersTable")
+    ){
+      renderCustomers();
+    }
+  }
+  
+
+
+  setTimeout(
+    startCustomerGoogleSearch,
+    300
+  );
+
+  setTimeout(
+    startCustomerGoogleSearch,
+    1200
+  );
+window.deleteItemsReal = function () {
+
+    if (!confirm("هل تريد حذف جميع الأصناف؟")) return;
+
+    db.items.length = 0;
+
+    saveDB();
+
+    if (typeof renderItems === "function") {
+        renderItems();
+    }
+
+    if (typeof renderAll === "function") {
+        renderAll();
+    }
+
+    alert("تم حذف جميع الأصناف بنجاح");
+};
+
+
+window.replaceItemsReal = function () {
+
+    if (!confirm("سيتم حذف جميع الأصناف الحالية ثم اختيار ملف Excel جديد. هل تريد المتابعة؟")) {
+        return;
+    }
+
+    db.items.length = 0;
+
+    saveDB();
+
+    const input = document.getElementById("itemsExcelFile");
+
+    if (input) {
+        input.value = "";
+        input.click();
+    } else {
+        alert("لم يتم العثور على ملف Excel");
+    }
+};
+})();
+    
+  /* تم تنظيف أكواد إدارة الأصناف المكررة */
+</script>
+</body>
+</html>
